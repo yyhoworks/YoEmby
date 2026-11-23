@@ -2,7 +2,7 @@ import os
 import base64
 import xbmc
 from helper import utils, artworkcache
-from ce_opt import config as ce_config, sync_fast as ce_sync # [CE-OPT]
+from ce_opt import config as ce_config, sync_fast as ce_sync, stream_meta as ce_stream_meta # [CE-OPT]
 EmbyTypeMappingShort = {"Movie": "m", "Episode": "e", "MusicVideo": "M", "Audio": "a", "Video": "v", "TvChannel": "t", "Trailer": "T"}
 EmbyArtworkIdShort = {"Primary": "p", "Art": "a", "Banner": "b", "Disc": "d", "Logo": "l", "Thumb": "t", "Backdrop": "B", "Chapter": "c", "SeriesPrimary": "p", "AlbumPrimary": "p", "ParentBackdrop": "B", "ParentThumb": "t", "ParentLogo": "l", "ParentBanner": "b", "AlbumArtists": "p", "ArtistItems": "p"}
 MarkerTypeMapping = {"IntroStart": "Intro Start", "IntroEnd": "Intro End", "CreditsStart": "Credits"}
@@ -498,34 +498,13 @@ def set_streams(Item):
                     Codec = "dtshd_hra"
 
             if Stream['Type'] == "Audio" or Stream['Type'] == "Default":
+                Codec = ce_stream_meta.normalize_audio_codec(Stream, Codec) # [CE-OPT] Map TrueHD Atmos / DD+ Atmos / DTS:X for Infuse badges
                 MediaSource['KodiStreams']['Audio'].append({'SampleRate': Stream.get('SampleRate', None), 'BitRate': Stream.get('BitRate', None), 'codec': Codec, 'channels': Stream.get('Channels', None), 'language': Stream.get('Language', ""), 'Index': StreamIndex, 'DisplayTitle': Stream.get('DisplayTitle', "unknown").replace(chr(1), "").replace(chr(0), ""), 'default': Stream.get('IsDefault', False), 'hearingimpaired': Stream.get('IsHearingImpaired', False)})
                 MediaSource['IndexMappingAudio'][int(StreamIndex)] = KodiStreamAudioIndex
                 KodiStreamAudioIndex += 1
             elif Stream['Type'] == "Video":
                 StreamData = {'language': Stream.get('Language', ""),'hdrtype': None, 'hdrdetail': "", 'codec': Codec, 'height': Stream.get('Height', None), 'width': Stream.get('Width', None), 'BitRate': Stream.get('BitRate', None), 'Index': StreamIndex, 'aspect': None, 'stereomode': "", 'default': Stream.get('IsDefault', False), 'hearingimpaired': Stream.get('IsHearingImpaired', False)}
-                VideoRange = Stream.get('VideoRange', "").lower()
-
-                if VideoRange == "hdr 10":
-                    StreamData['hdrtype'] = "hdr10"
-                elif VideoRange == "hlg":
-                    StreamData['hdrtype'] = "hlg"
-                elif VideoRange == "dolbyvision":
-                    StreamData['hdrtype'] = "dolbyvision"
-                    ExtendedVideoSubType = Stream.get('ExtendedVideoSubType', '')
-
-                    if ExtendedVideoSubType and ExtendedVideoSubType != 'None':
-                        if ExtendedVideoSubType == 'DoviProfile50':
-                            StreamData['hdrdetail'] = "5"
-                        elif ExtendedVideoSubType == 'DoviProfile76':
-                            StreamData['hdrdetail'] = "7"
-                        elif ExtendedVideoSubType == 'DoviProfile81':
-                            StreamData['hdrdetail'] = "8.1"
-                        elif ExtendedVideoSubType == 'DoviProfile84':
-                            StreamData['hdrdetail'] = "8.4"
-                        elif ExtendedVideoSubType == 'DoviProfile92':
-                            StreamData['hdrdetail'] = "9.2"
-                        elif ExtendedVideoSubType == 'DoviProfile10':
-                            StreamData['hdrdetail'] = "10"
+                StreamData['hdrtype'], StreamData['hdrdetail'] = ce_stream_meta.detect_hdr_type(Stream) # [CE-OPT] Enhanced HDR10+/DV/HLG detection
 
                 if Video3DFormat in ('HalfSideBySide', 'FullSideBySide'):
                     StreamData['stereomode'] = "left_right"
@@ -563,6 +542,9 @@ def set_streams(Item):
                 MediaSource['KodiStreams']['Subtitle'].append({'Index': StreamIndex, 'language': Stream.get('Language', "undefined"), 'DisplayTitle': Stream.get('DisplayTitle', "undefined").replace(chr(1), "").replace(chr(0), ""), 'codec': Codec, 'external': IsExternal, 'forced': Stream.get('IsForced', False), 'default': Stream.get('IsDefault', False)})
                 MediaSource['IndexMappingSubtitle'][int(StreamIndex)] = KodiStreamSubtitleIndex
                 KodiStreamSubtitleIndex += 1
+
+        if not MediaSource['KodiStreams']['Video']: # [CE-OPT] Filename fallback for unprobed STRM items
+            ce_stream_meta.infer_streams_from_name(Item, MediaSource)
 
 def set_RunTimeTicks(Item):
     if 'RunTimeTicks' in Item:

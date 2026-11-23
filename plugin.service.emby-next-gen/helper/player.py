@@ -7,6 +7,7 @@ import xbmc
 from database import dbio
 from emby import listitem
 from helper import utils, playerops, queue, cache
+from ce_opt import stream_meta as ce_stream_meta # [CE-OPT]
 from dialogs import skipintrocredits
 TrackerPaused = False
 VideoPlayback = "READY"
@@ -321,6 +322,9 @@ def PlayerCommands():
             PlayingItem = QueuedPlayingItem.copy()
             QueuedPlayingItem.clear()
             init_EmbyPlayback()
+
+            if PlayItem[0] and PlayItem[1] in ("movie", "episode"): # [CE-OPT] Backfill missing STRM streamdetails once playback starts
+                utils.start_thread(ce_stream_meta.maybe_backfill_from_player, (PlayItem[0], PlayItem[1], xbmc, dbio))
 
             if VideoPlayback == "CONTENT":
                 VideoPlayback = "READY"
