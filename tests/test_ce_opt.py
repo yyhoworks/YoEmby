@@ -227,6 +227,28 @@ class ArtworkTest(unittest.TestCase):
         self.assertEqual(artwork.parse_image_metadata(_make_webp_vp8x(1920, 1080)), (1920, 1080, "webp"))
         self.assertEqual(artwork.parse_image_metadata(b"short"), (0, 0, ""))
 
+    def test_fast_kodi_hash_matches_upstream_bit_by_bit(self):
+        def upstream_kodi_hash(path):
+            crc = 0xFFFFFFFF
+            for val in path.lower().encode("utf-8"):
+                crc ^= val << 24
+                for _ in range(8):
+                    if crc & 0x80000000:
+                        crc = (crc << 1) ^ 0x04C11DB7
+                    else:
+                        crc <<= 1
+                    crc &= 0xFFFFFFFF
+            return f"{crc:08x}"
+
+        samples = [
+            "http://127.0.0.1:57342/picture/srv1/p-885750-0-p-abc123",
+            "image://epg@http%3A%2F%2F127.0.0.1%3A57342%2Fpicture%2F1ecb%2Fp-1-0-p-tag/unknown",
+            "image://epg@http%3A%2F%2F127.0.0.1%3A57342%2Fpicture%2F1ecb%2Fp-1-0-c-noimage-章节1/noimage.jpg",
+            "",
+        ]
+        for s in samples:
+            self.assertEqual(artwork.fast_kodi_hash(s), upstream_kodi_hash(s))
+
     def test_concurrent_artwork_cache(self):
         jpeg_bytes = _make_jpeg_with_dht_before_sof0(600, 900)
         png_bytes = _make_png(800, 250)
@@ -286,6 +308,7 @@ class ArtworkTest(unittest.TestCase):
                     ("http://127.0.0.1:57342/picture/srv1/p-101-0-p-tag1",),
                     ("http://127.0.0.1:57342/picture/srv1/p-101-0-p-tag1",),  # duplicate
                     ("http://127.0.0.1:57342/picture/srv1/p-102-0-l-tag2",),
+                    ("http://127.0.0.1:57342/picture/srv1/p-103-0-c-noimage-Chapter1",),  # skipped noimage
                 ]
 
                 cached = artwork.cache_all_entries_concurrent(

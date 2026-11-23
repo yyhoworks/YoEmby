@@ -16,7 +16,7 @@ import xbmcvfs
 import xbmc
 import xbmcaddon
 import xbmcgui
-from ce_opt import sync_fast as ce_sync, idle_opt as ce_idle # [CE-OPT]
+from ce_opt import config as ce_config, artwork as ce_artwork, sync_fast as ce_sync, idle_opt as ce_idle # [CE-OPT]
 
 Addon = xbmcaddon.Addon("plugin.service.emby-next-gen")
 addon_version = Addon.getAddonInfo('version')
@@ -1593,6 +1593,9 @@ def get_digits(Text):
     return 0
 
 def kodi_hash(Path):
+    if ce_config.is_enabled("ARTWORK_FAST_KODI_HASH"): # [CE-OPT] 256-entry lookup table CRC-32 (~20x faster)
+        return ce_artwork.fast_kodi_hash(Path)
+
     Path = Path.lower()
     crc = 0xffffffff
 

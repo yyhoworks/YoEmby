@@ -32,6 +32,31 @@ _JPEG_SOF_MARKERS = frozenset(
 )
 
 
+def _build_crc32_mpeg2_table():
+    table = []
+    for byte in range(256):
+        crc = byte << 24
+        for _ in range(8):
+            if crc & 0x80000000:
+                crc = ((crc << 1) ^ 0x04C11DB7) & 0xFFFFFFFF
+            else:
+                crc = (crc << 1) & 0xFFFFFFFF
+        table.append(crc)
+    return tuple(table)
+
+
+_CRC32_MPEG2_TABLE = _build_crc32_mpeg2_table()
+
+
+def fast_kodi_hash(path):
+    """256-entry lookup-table CRC-32/MPEG-2 matching Kodi & upstream ``utils.kodi_hash``."""
+    crc = 0xFFFFFFFF
+    table = _CRC32_MPEG2_TABLE
+    for byte in path.lower().encode("utf-8"):
+        crc = ((crc << 8) & 0xFFFFFFFF) ^ table[((crc >> 24) ^ byte) & 0xFF]
+    return f"{crc:08x}"
+
+
 def _limitation_percent_from_utils(utils_mod, image_type):
     attr_map = {
         "Primary": "ArtworkLimitationPrimary",
@@ -371,13 +396,19 @@ def cache_all_entries_concurrent(urls, worker_name, utils_mod, add_textures_fn, 
     tasks = []
     seen_cache_paths = set()
     created_dirs = set()
+    skip_noimage = config.is_enabled("ARTWORK_CACHE_SKIP_NOIMAGE")
+    progress_interval = float(config.get_value("ARTWORK_CACHE_PROGRESS_INTERVAL", 0.25))
+    last_scan_progress = 0.0
 
-    for url_row in urls:
+    for idx_in, url_row in enumerate(urls):
         if getattr(utils_mod, "TextureCacheCancel", False) or getattr(utils_mod, "SystemShutdown", False):
             return 0
         raw_url = url_row[0] if isinstance(url_row, (list, tuple)) else url_row
         entry = _parse_artwork_entry(raw_url, texture_version, utils_mod.image_url_decode)
         if not entry:
+            continue
+
+        if skip_noimage and entry["image_tag"].lower() == "noimage":
             continue
 
         cache_path = entry["cache_path"]
@@ -413,6 +444,17 @@ def cache_all_entries_concurrent(urls, worker_name, utils_mod, add_textures_fn, 
         entry["subdir"] = subdir
         tasks.append(entry)
 
+        if idx_in % 256 == 0:
+            now = time.monotonic()
+            if now - last_scan_progress >= progress_interval:
+                last_scan_progress = now
+                utils_mod.update_ProgressBar(
+                    worker_name,
+                    0,
+                    utils_mod.Translate(33199),
+                    f"{utils_mod.Translate(33045)}: {len(tasks)} / {total_input}",
+                )
+
     if not tasks:
         return 0
 
@@ -428,22 +470,27 @@ def cache_all_entries_concurrent(urls, worker_name, utils_mod, add_textures_fn, 
 
     max_workers = max(1, int(config.get_value("ARTWORK_CACHE_WORKERS", 6)))
     timeout = max(3, int(config.get_value("ARTWORK_CACHE_TIMEOUT", 15)))
-    progress_interval = float(config.get_value("ARTWORK_CACHE_PROGRESS_INTERVAL", 0.25))
     pool = _ThreadLocalHttpPool(timeout=timeout, ssl_verify=bool(getattr(utils_mod, "sslverify", False)))
+    # Serialize CPU-heavy Pillow overlay rendering so Kodi's UI thread never starves on GIL
+    overlay_lock = threading.Semaphore(1)
 
     def _fetch_and_write(task):
         if getattr(utils_mod, "TextureCacheCancel", False) or getattr(utils_mod, "SystemShutdown", False):
             return None
 
         if task["overlay_text"]:
-            image_binary, _, _ = utils_mod.image_overlay(
-                task["image_tag"],
-                task["server_id"],
-                task["emby_id"],
-                task["image_type"],
-                task["image_index"],
-                task["overlay_text"],
-            )
+            with overlay_lock:
+                if getattr(utils_mod, "TextureCacheCancel", False) or getattr(utils_mod, "SystemShutdown", False):
+                    return None
+                image_binary, _, _ = utils_mod.image_overlay(
+                    task["image_tag"],
+                    task["server_id"],
+                    task["emby_id"],
+                    task["image_type"],
+                    task["image_index"],
+                    task["overlay_text"],
+                )
+            time.sleep(0.005)
         else:
             server_data = utils_mod.EmbyServers[task["server_id"]].ServerData
             url = build_picture_redirect_url(
@@ -521,6 +568,11 @@ def cache_all_entries_concurrent(urls, worker_name, utils_mod, add_textures_fn, 
                 futures = [executor.submit(_fetch_and_write, task) for task in chunk]
 
                 for fut in as_completed(futures):
+                    if getattr(utils_mod, "TextureCacheCancel", False) or getattr(utils_mod, "SystemShutdown", False):
+                        for pending in futures:
+                            pending.cancel()
+                        break
+
                     done_count += 1
                     item = None
                     try:
