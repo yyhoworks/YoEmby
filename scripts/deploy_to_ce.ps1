@@ -6,11 +6,12 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $AddonDir = Join-Path $RepoRoot "plugin.service.emby-next-gen"
-$TempZip  = Join-Path $env:TEMP "emby-next-gen-ce-deploy.zip"
+$TempZip  = Join-Path $env:TEMP "yoemby-deploy.zip"
+$GuardrailScript = Join-Path $PSScriptRoot "verify_guardrails.py"
 
-Write-Host "[1/5] Checking Python syntax..." -ForegroundColor Cyan
-python -m compileall -q $AddonDir
-if ($LASTEXITCODE -ne 0) { throw "Python syntax check failed." }
+Write-Host "[1/5] Running YoEmby guardrails, syntax check & unit tests..." -ForegroundColor Cyan
+python $GuardrailScript
+if ($LASTEXITCODE -ne 0) { throw "YoEmby guardrail check failed. Deployment aborted." }
 
 Write-Host "[2/5] Packaging $AddonDir ..." -ForegroundColor Cyan
 if (Test-Path $TempZip) { Remove-Item $TempZip -Force }
@@ -25,11 +26,11 @@ if ($SkipBackup) {
 }
 
 Write-Host "[4/5] Uploading and installing addon..." -ForegroundColor Cyan
-scp -o BatchMode=yes $TempZip "${HostAlias}:/tmp/emby-next-gen-ce-deploy.zip"
+scp -o BatchMode=yes $TempZip "${HostAlias}:/tmp/yoemby-deploy.zip"
 @'
 import zipfile, shutil, os
-z = "/tmp/emby-next-gen-ce-deploy.zip"
-ext = "/tmp/emby-next-gen-ce-ext"
+z = "/tmp/yoemby-deploy.zip"
+ext = "/tmp/yoemby-ext"
 dst = "/storage/.kodi/addons/plugin.service.emby-next-gen"
 if os.path.exists(ext): shutil.rmtree(ext)
 with zipfile.ZipFile(z) as zf:
