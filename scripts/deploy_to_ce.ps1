@@ -13,9 +13,25 @@ Write-Host "[1/5] Running YoEmby guardrails, syntax check & unit tests..." -Fore
 python $GuardrailScript
 if ($LASTEXITCODE -ne 0) { throw "YoEmby guardrail check failed. Deployment aborted." }
 
-Write-Host "[2/5] Packaging $AddonDir ..." -ForegroundColor Cyan
+Write-Host "[2/5] Packaging $AddonDir (POSIX paths, excluding __pycache__) ..." -ForegroundColor Cyan
 if (Test-Path $TempZip) { Remove-Item $TempZip -Force }
-Compress-Archive -Path $AddonDir -DestinationPath $TempZip -CompressionLevel Fast
+python -c @"
+import os, sys, zipfile
+src = sys.argv[1]
+dst = sys.argv[2]
+base = os.path.dirname(src)
+with zipfile.ZipFile(dst, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
+    for root, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d != '__pycache__']
+        for name in files:
+            if name.endswith(('.pyc', '.pyo')):
+                continue
+            full = os.path.join(root, name)
+            rel = os.path.relpath(full, base).replace(os.sep, '/')
+            zf.write(full, rel)
+print('Packaged:', dst)
+"@ $AddonDir $TempZip
+if ($LASTEXITCODE -ne 0) { throw "Packaging failed." }
 
 Write-Host "[3/5] Stopping Kodi and creating remote backup on $HostAlias ..." -ForegroundColor Cyan
 if ($SkipBackup) {
@@ -24,9 +40,11 @@ if ($SkipBackup) {
     $ts = Get-Date -Format "yyyyMMdd_HHmmss"
     ssh -o BatchMode=yes -o ConnectTimeout=5 $HostAlias "systemctl stop kodi && sleep 2 && mkdir -p /storage/backup/emby-dev && cp -a /storage/.kodi/addons/plugin.service.emby-next-gen /storage/backup/emby-dev/plugin.service.emby-next-gen.$ts"
 }
+if ($LASTEXITCODE -ne 0) { throw "Failed to stop Kodi / create backup." }
 
 Write-Host "[4/5] Uploading and installing addon..." -ForegroundColor Cyan
 scp -o BatchMode=yes $TempZip "${HostAlias}:/tmp/yoemby-deploy.zip"
+if ($LASTEXITCODE -ne 0) { throw "SCP upload failed." }
 @'
 import zipfile, shutil, os
 z = "/tmp/yoemby-deploy.zip"
@@ -43,8 +61,10 @@ shutil.rmtree(ext)
 os.remove(z)
 print("Deployed ->", dst)
 '@ | ssh -o BatchMode=yes -o ConnectTimeout=5 $HostAlias "python3 -"
+if ($LASTEXITCODE -ne 0) { throw "Remote extract/install failed." }
 Remove-Item $TempZip -Force -ErrorAction SilentlyContinue
 
 Write-Host "[5/5] Starting Kodi..." -ForegroundColor Cyan
 ssh -o BatchMode=yes -o ConnectTimeout=5 $HostAlias "systemctl start kodi"
+if ($LASTEXITCODE -ne 0) { throw "Failed to start Kodi." }
 Write-Host "Done! Run .\scripts\inspect_ce.ps1 in ~10s to verify logs." -ForegroundColor Green
