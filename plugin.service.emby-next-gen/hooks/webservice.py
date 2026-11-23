@@ -6,7 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
-from ce_opt import config as ce_config, artwork as ce_artwork # [CE-OPT]
+from ce_opt import config as ce_config, artwork as ce_artwork, strm as ce_strm # [CE-OPT]
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -573,8 +573,9 @@ def send_redirect(client, MetaData, Data, AddCache=True):
     if AddCache:
         httpcache.add(MetaData, Data)
 
-    if MetaData['isHttp'] and utils.followhttp:
-        SendData = f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0]['Path']}\r\nContent-Length: 0\r\nAccept-Ranges: none\r\n\r\n".encode()
+    SelectedMediaSource = MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0] if MetaData.get('MediaSources') else None # [CE-OPT]
+    if ce_strm.should_direct_redirect_http(MetaData, SelectedMediaSource, Data, utils.followhttp): # [CE-OPT] Direct 307 for LAN HTTP STRM gateways or followhttp
+        SendData = f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {SelectedMediaSource['Path']}\r\nContent-Length: 0\r\nAccept-Ranges: none\r\n\r\n".encode()
     else:
         Path = build_Path(MetaData, Data)
 
@@ -967,8 +968,9 @@ def LoadData(MetaData, client):
 
     # Stream content
     if 'TranscodeReasons' not in MetaData:
-        if MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0]['IsRemote']:  # remote content -> verify source
-            StatusCode = utils.EmbyServers[MetaData['ServerId']].API.get_stream_statuscode(MetaData['EmbyId'], MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0]['Id'])
+        SelectedMediaSource = MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0] # [CE-OPT]
+        if SelectedMediaSource['IsRemote'] and not ce_strm.should_skip_remote_head(MetaData, SelectedMediaSource, utils.followhttp): # [CE-OPT] Skip blocking HEAD probe for HTTP STRM sources
+            StatusCode = utils.EmbyServers[MetaData['ServerId']].API.get_stream_statuscode(MetaData['EmbyId'], SelectedMediaSource['Id'])
             xbmc.log(f"EMBY.hooks.webservice: Remote content verification: {StatusCode}", 1) # LOGINFO
 
             if StatusCode != 200:
