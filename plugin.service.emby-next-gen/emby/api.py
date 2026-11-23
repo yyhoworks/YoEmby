@@ -2,6 +2,7 @@ import threading
 import json
 import xbmc
 from helper import utils, queue
+from ce_opt import sync_fast as ce_sync # [CE-OPT]
 from database import dbio
 from . import listitem, httpcache
 
@@ -1030,7 +1031,7 @@ def get_Limit(MediaType):
         return utils.MusicgenrePaging
 
     if Type == "person":
-        return utils.PersonPaging
+        return ce_sync.get_person_paging(utils.PersonPaging) # [CE-OPT] Cap Person paging to avoid multi-MB single-shot JSON spikes
 
     if Type == "tag":
         return utils.TagPaging

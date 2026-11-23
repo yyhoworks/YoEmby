@@ -44,6 +44,18 @@ STRM_FAST_PATH = True
 STRM_SKIP_REMOTE_HEAD = True
 STRM_LAN_DIRECT_REDIRECT = True
 
+# Library sync & startup incremental sync optimizations (Batch 2)
+SYNC_SKIP_DISABLED_THEMES = True
+SYNC_THROTTLE_PROGRESS = True
+SYNC_PROGRESS_INTERVAL = 0.25
+SYNC_BATCH_LINKS = True
+SYNC_DEDUP_PERSON_ART = True
+SYNC_SKIP_NOIMAGE_CHAPTERS = True
+SYNC_PERSON_PAGING_OPT = True
+SYNC_PERSON_PAGING_CAP = 5000
+SYNC_TRUST_COMPANION_EMPTY = True
+SYNC_COMPANION_EMPTY_TYPES = ("Person", "BoxSet")
+
 _OVERRIDE_LOADED = False
 
 
@@ -102,6 +114,10 @@ def load_overrides(config_path=None):
                 merged = current.copy()
                 merged.update(value)
                 module_globals[key] = merged
+                applied = True
+        elif isinstance(current, tuple):
+            if isinstance(value, (list, tuple)):
+                module_globals[key] = tuple(value)
                 applied = True
 
     return applied

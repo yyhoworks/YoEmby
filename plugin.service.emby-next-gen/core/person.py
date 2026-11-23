@@ -1,5 +1,6 @@
 import xbmc
 from helper import utils
+from ce_opt import sync_fast as ce_sync # [CE-OPT]
 from . import common
 
 class Person:
@@ -44,7 +45,7 @@ class Person:
 
             utils.notify_event("content_add", {"EmbyId": Item['Id'], "KodiId": Item['KodiItemId'], "KodiType": "actor"}, IncrementalSync)
 
-        self.SQLs["video"].common_db.add_artwork(Item['KodiArtwork'], Item['KodiItemId'], "actor")
+        self.SQLs["video"].common_db.add_artwork(ce_sync.dedup_person_artwork(Item['KodiArtwork']), Item['KodiItemId'], "actor") # [CE-OPT] Deduplicate redundant actor poster/landscape art rows
         return not Item['UpdateItem']
 
     def remove(self, Item, IncrementalSync):

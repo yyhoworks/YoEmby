@@ -2,6 +2,7 @@ import os
 import base64
 import xbmc
 from helper import utils, artworkcache
+from ce_opt import config as ce_config, sync_fast as ce_sync # [CE-OPT]
 EmbyTypeMappingShort = {"Movie": "m", "Episode": "e", "MusicVideo": "M", "Audio": "a", "Video": "v", "TvChannel": "t", "Trailer": "T"}
 EmbyArtworkIdShort = {"Primary": "p", "Art": "a", "Banner": "b", "Disc": "d", "Logo": "l", "Thumb": "t", "Backdrop": "B", "Chapter": "c", "SeriesPrimary": "p", "AlbumPrimary": "p", "ParentBackdrop": "B", "ParentThumb": "t", "ParentLogo": "l", "ParentBanner": "b", "AlbumArtists": "p", "ArtistItems": "p"}
 MarkerTypeMapping = {"IntroStart": "Intro Start", "IntroEnd": "Intro End", "CreditsStart": "Credits"}
@@ -868,6 +869,8 @@ def load_chapter(MediaSource, Chapter, Index, ServerId, ItemId):
 
         if "ImageTag" in Chapter:
             ChapterImage = utils.image_url_encode(f"http://127.0.0.1:57342/picture/{ServerId}/p-{Id}-{Index}-c-{Chapter['ImageTag']}-{utils.image_text_encode(Chapter['Name'])}", "unknown")
+        elif ce_sync.should_skip_noimage_chapter(MarkerLabel, False): # [CE-OPT] Skip 5-min noimage dummy chapters (preserves Intro/Credits markers)
+            return
         else:
             ChapterImage = utils.image_url_encode(f"http://127.0.0.1:57342/picture/{ServerId}/p-{Id}-{Index}-c-noimage-{utils.image_text_encode(Chapter['Name'])}", "noimage.jpg")
 
@@ -1142,6 +1145,10 @@ def set_MusicGenre_links(KodiItemId, SQLs, KodiType, MetaDataItems, Index):
             xbmc.log(f"EMBY.core.common: set_MusicGenre_links 2 error: {MetaDataItem}", 3) # LOGERROR
 
 def set_Genre_links(KodiItemId, SQLs, KodiType, MetaDataItems):
+    if ce_config.is_enabled("SYNC_BATCH_LINKS"): # [CE-OPT] Batched link lookup & insert
+        ce_sync.batch_set_links(KodiItemId, SQLs, KodiType, MetaDataItems, "Genre", "genre_link", "genre_id", False, xbmc)
+        return
+
     for MetaDataItem in MetaDataItems:
         MetaDataItemKodiId = SQLs["emby"].get_item_by_id(MetaDataItem['Id'], "Genre")
 
@@ -1151,6 +1158,10 @@ def set_Genre_links(KodiItemId, SQLs, KodiType, MetaDataItems):
             xbmc.log(f"EMBY.core.common: set_Genre_links error: {MetaDataItem}", 3) # LOGERROR
 
 def set_Writer_links(KodiItemId, SQLs, KodiType, MetaDataItems):
+    if ce_config.is_enabled("SYNC_BATCH_LINKS"): # [CE-OPT] Batched link lookup & insert
+        ce_sync.batch_set_links(KodiItemId, SQLs, KodiType, MetaDataItems, "Person", "writer_link", "actor_id", False, xbmc)
+        return
+
     for MetaDataItem in MetaDataItems:
         MetaDataItemKodiId = SQLs["emby"].get_item_by_id(MetaDataItem['Id'], "Person")
 
@@ -1160,6 +1171,10 @@ def set_Writer_links(KodiItemId, SQLs, KodiType, MetaDataItems):
             xbmc.log(f"EMBY.core.common: set_Writer_links error: {MetaDataItem}", 3) # LOGERROR
 
 def set_Director_links(KodiItemId, SQLs, KodiType, MetaDataItems):
+    if ce_config.is_enabled("SYNC_BATCH_LINKS"): # [CE-OPT] Batched link lookup & insert
+        ce_sync.batch_set_links(KodiItemId, SQLs, KodiType, MetaDataItems, "Person", "director_link", "actor_id", False, xbmc)
+        return
+
     for MetaDataItem in MetaDataItems:
         MetaDataItemKodiId = SQLs["emby"].get_item_by_id(MetaDataItem['Id'], "Person")
 
@@ -1169,6 +1184,10 @@ def set_Director_links(KodiItemId, SQLs, KodiType, MetaDataItems):
             xbmc.log(f"EMBY.core.common: set_Director_links error: {MetaDataItem}", 3) # LOGERROR
 
 def set_Studio_links(KodiItemId, SQLs, KodiType, MetaDataItems):
+    if ce_config.is_enabled("SYNC_BATCH_LINKS"): # [CE-OPT] Batched link lookup & insert
+        ce_sync.batch_set_links(KodiItemId, SQLs, KodiType, MetaDataItems, "Studio", "studio_link", "studio_id", False, xbmc)
+        return
+
     for MetaDataItem in MetaDataItems:
         MetaDataItemKodiId = SQLs["emby"].get_item_by_id(MetaDataItem['Id'], "Studio")
 
@@ -1178,6 +1197,10 @@ def set_Studio_links(KodiItemId, SQLs, KodiType, MetaDataItems):
             xbmc.log(f"EMBY.core.common: set_Studio_links error: {MetaDataItem}", 3) # LOGERROR
 
 def set_Tag_links(KodiItemId, SQLs, KodiType, MetaDataItems):
+    if ce_config.is_enabled("SYNC_BATCH_LINKS"): # [CE-OPT] Batched link lookup & insert
+        ce_sync.batch_set_links(KodiItemId, SQLs, KodiType, MetaDataItems, "Tag", "tag_link", "tag_id", False, xbmc)
+        return
+
     for MetaDataItem in MetaDataItems:
         MetaDataItemKodiId = SQLs["emby"].get_item_by_id(MetaDataItem['Id'], "Tag")
 
@@ -1187,6 +1210,10 @@ def set_Tag_links(KodiItemId, SQLs, KodiType, MetaDataItems):
             xbmc.log(f"EMBY.core.common: set_Tag_links error: {MetaDataItem}", 3) # LOGERROR
 
 def set_Actor_links(KodiItemId, SQLs, KodiType, MetaDataItems):
+    if ce_config.is_enabled("SYNC_BATCH_LINKS"): # [CE-OPT] Batched link lookup & insert
+        ce_sync.batch_set_links(KodiItemId, SQLs, KodiType, MetaDataItems, "Person", "actor_link", "actor_id", True, xbmc)
+        return
+
     for Order, MetaDataItem in enumerate(MetaDataItems):
         MetaDataItemKodiId = SQLs["emby"].get_item_by_id(MetaDataItem['Id'], "Person")
 

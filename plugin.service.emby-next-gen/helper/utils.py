@@ -16,6 +16,7 @@ import xbmcvfs
 import xbmc
 import xbmcaddon
 import xbmcgui
+from ce_opt import sync_fast as ce_sync # [CE-OPT]
 
 Addon = xbmcaddon.Addon("plugin.service.emby-next-gen")
 addon_version = Addon.getAddonInfo('version')
@@ -368,7 +369,7 @@ def update_ProgressBar(TaskId, Value, Header, Message):
             ProgressBars[1][TaskId][1] = Message
             ProgressBars[1][TaskId][2] = Value
 
-            if ProgressBars[1][TaskId][3]:
+            if ProgressBars[1][TaskId][3] and ce_sync.should_update_progress(TaskId, Value, Header): # [CE-OPT] Throttle frequent GUI progress updates
                 ProgressBars[1][TaskId][3].update(Value, ProgressBars[1][TaskId][0], ProgressBars[1][TaskId][1])
 
 def close_ProgressBar(TaskId):
@@ -378,6 +379,7 @@ def close_ProgressBar(TaskId):
                 ProgressBars[1][TaskId][3].close()
 
             del ProgressBars[1][TaskId]
+        ce_sync.clear_progress_state(TaskId) # [CE-OPT]
 
 def closeall_ProgressBar():
     with SafeLock(ProgressBarsLock):
@@ -388,6 +390,7 @@ def closeall_ProgressBar():
                 ProgressBar[3].close()
 
             ProgressBar[3] = None
+        ce_sync.clear_all_progress_state() # [CE-OPT]
 
 def openall_ProgressBar():
     with SafeLock(ProgressBarsLock):

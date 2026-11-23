@@ -1,5 +1,6 @@
 import xbmc
 from helper import utils
+from ce_opt import sync_fast as ce_sync # [CE-OPT]
 from . import common, genre, tag, studio, person, trailer
 
 
@@ -103,7 +104,8 @@ class Series:
 
             utils.notify_event("content_add", {"EmbyId": Item['Id'], "KodiId": Item['KodiItemId'], "KodiType": "tvshow"}, IncrementalSync)
 
-        self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Series", Item['LibraryId'], Item['KodiItemId'], "Theme", "") # Add Subitems
+        if ce_sync.should_enqueue_theme(utils): # [CE-OPT] Skip Theme queue when theme audio/video are disabled
+            self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Series", Item['LibraryId'], Item['KodiItemId'], "Theme", "") # Add Subitems
         return not Item['UpdateItem']
 
     # This updates: Favorite, LastPlayedDate, PlaybackPositionTicks
