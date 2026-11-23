@@ -16,6 +16,7 @@
 | 运维清理（用户授权） | 清理旧版 11.x 残留缩略图与 `Textures13.db` 压缩 | —（不改动代码） | — | 已备份 `/storage/backup/emby-dev/Textures13.db.bak.*` | 清理 `6,466` 个过期文件释放 **`735.5 MB`**；`Textures13.db` `5.20 MB → 0.48 MB`（`-90.8%`）；保留全部 `622` 个有效 12.x/皮肤缓存 |
 | Batch 3.1 | `HDR10+` / `TrueHD Atmos` / `DD+ Atmos` / `DTS:X` 徽标映射 + 未探针 STRM 文件名兜底与播后 `streamdetails` 自动回填 | `core/common.py`, `helper/player.py`（累计 `+109` 行） | `ce_opt/stream_meta.py` | `ce_opt.json`: `STREAM_META_ENHANCED` / `STREAM_STRM_NAME_FALLBACK` / `STREAM_PLAYBACK_BACKFILL` | 精准对齐 `skin.yoplayer.infuse` 徽标词表；未探针 STRM 首次播放后自动补全 Kodi `streamdetails`，不覆盖已有实测流 |
 | Batch 3.2 | 事件驱动 `interruptible_sleep` 与空闲后台轮询线程收敛 | `utils.py`, `monitor.py`, `themes.py`, `webservice.py`, `favorites.py`, `artworkcache.py`（累计 `+123` 行） | `ce_opt/idle_opt.py` | `ce_opt.json`: `IDLE_WAKEUP_OPT` / `IDLE_*_SEC` | `kodi.bin` 待机自愿上下文切换 **`1,583.0/s → 1,044.7/s`**（**`-34.0%`**）；关机/重启 `<1 ms` 立即唤醒退出；21/21 单元测试通过 |
+| Hotfix `ce.2` | 修复预缓存选「全部」卡顿 UI（256 表查表法 `fast_kodi_hash` 提速 ~20× + 跳过无图 `noimage` 书签 + Pillow 水印串行让出 GIL + 预处理实时进度与秒取消） | `helper/utils.py`（累计 `+126` 行） | `ce_opt/artwork.py`, `ce_opt/config.py` | `ce_opt.json`: `ARTWORK_CACHE_SKIP_NOIMAGE` / `ARTWORK_FAST_KODI_HASH` | 消除 5.5 万条哈希 3 分钟阻塞与 Pillow 抢 GIL 卡死遥控器；22/22 单元测试通过（逐比特对齐原版 `kodi_hash`） |
 
 ## 全阶段实测基准汇总（CoreELEC `192.168.1.123`）
 
