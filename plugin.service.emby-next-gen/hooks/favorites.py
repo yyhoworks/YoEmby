@@ -3,6 +3,7 @@ import xbmcvfs
 from helper import utils
 from core import movies, videos, musicvideo, boxsets, genre, musicgenre, musicartist, musicalbum, audio, tag, person, studio, playlist, series, season, episode, common
 from database import dbio
+from ce_opt import idle_opt as ce_idle # [CE-OPT]
 
 KodiFavFile = "special://profile/favourites.xml"
 FavoriteUpdatedByEmby = False
@@ -17,7 +18,7 @@ def monitor_Favorites():
     FavFileExits = False
 
     while True:
-        if utils.sleep(0.5):
+        if utils.sleep(ce_idle.get_interval("IDLE_FAVORITES_POLL_SEC", 0.5)): # [CE-OPT] Reduce idle favourites.xml stat frequency
             if utils.DebugLog: xbmc.log("EMBY.hooks.favorites (DEBUG): THREAD: ---<[ Kodi favorites ]", 1) # LOGDEBUG
             return
 

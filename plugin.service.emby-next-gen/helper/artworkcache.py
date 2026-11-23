@@ -3,7 +3,7 @@ from urllib.parse import unquote
 import xbmcvfs
 import xbmc
 from database import dbio
-from ce_opt import config as ce_config, artwork as ce_artwork # [CE-OPT]
+from ce_opt import config as ce_config, artwork as ce_artwork, idle_opt as ce_idle # [CE-OPT]
 from . import utils
 
 EmbyArtworkIDs = {"p": "Primary", "a": "Art", "b": "Banner", "d": "Disc", "l": "Logo", "t": "Thumb", "B": "Backdrop", "c": "Chapter"}
@@ -164,7 +164,7 @@ def get_image_metadata(ImageBinaryData, Hash):
 
 def delete_artworkcache_watchdog():
     while True:
-        if utils.sleep(1):
+        if utils.sleep(ce_idle.get_interval("IDLE_ARTWORK_WATCHDOG_SEC", 1.0)): # [CE-OPT] Reduce idle delete watchdog wakeups
             return
 
         delete_artworkcache()

@@ -16,7 +16,7 @@ import xbmcvfs
 import xbmc
 import xbmcaddon
 import xbmcgui
-from ce_opt import sync_fast as ce_sync # [CE-OPT]
+from ce_opt import sync_fast as ce_sync, idle_opt as ce_idle # [CE-OPT]
 
 Addon = xbmcaddon.Addon("plugin.service.emby-next-gen")
 addon_version = Addon.getAddonInfo('version')
@@ -654,22 +654,11 @@ def restart_kodi():
     global SystemShutdown
     if DebugLog: xbmc.log("EMBY.helper.utils: Restart Kodi", 1) # LOGINFO
     SystemShutdown = True
+    ce_idle.notify_shutdown() # [CE-OPT] Wake sleeping threads immediately on shutdown
     xbmc.executebuiltin('RestartApp')
 
 def sleep(Seconds):
-    if Seconds < 0.1:
-        if SystemShutdown:
-            return True
-
-        xbmc.sleep(int(Seconds * 1000))
-    else:
-        for _ in range(int(Seconds * 10)):
-            if SystemShutdown:
-                return True
-
-            xbmc.sleep(100)
-
-    return False
+    return ce_idle.interruptible_sleep(Seconds, lambda: SystemShutdown, xbmc.sleep) # [CE-OPT] Event-backed sleep to cut 10Hz GIL wakeups
 
 # Delete objects from kodi cache
 def delFolder(path, Pattern=""):

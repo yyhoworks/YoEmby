@@ -6,7 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
-from ce_opt import config as ce_config, artwork as ce_artwork, strm as ce_strm # [CE-OPT]
+from ce_opt import config as ce_config, artwork as ce_artwork, strm as ce_strm, idle_opt as ce_idle # [CE-OPT]
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -161,7 +161,7 @@ def close():
 def Listen():
     if utils.DebugLog: xbmc.log("EMBY.hooks.webservice (DEBUG): THREAD: --->[ webservice/57342 ]", 1) # LOGDEBUG
     Socket.listen()
-    Socket.settimeout(0.1)
+    Socket.settimeout(ce_idle.get_interval("IDLE_WEBSERVICE_TIMEOUT_SEC", 0.1)) # [CE-OPT] Reduce idle accept loop wakeups
 
     while not utils.SystemShutdown and Running:
         try:

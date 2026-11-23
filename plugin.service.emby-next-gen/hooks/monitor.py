@@ -5,6 +5,7 @@ import xbmc
 from helper import pluginmenu, utils, playerops, xmls, player, queue, deduplicate, backup, cache, artworkcache
 from database import dbio
 from emby import emby, httpcache
+from ce_opt import idle_opt as ce_idle # [CE-OPT]
 from . import webservice, favorites, themes
 
 QueueItemsRemove = set()
@@ -644,7 +645,7 @@ def StartUp():
 
         utils.NextGenOnline.set()
 
-        while not XbmcMonitor.waitForAbort(0.1):
+        while not XbmcMonitor.waitForAbort(ce_idle.get_interval("IDLE_MONITOR_ABORT_SEC", 0.1)): # [CE-OPT] Reduce 10Hz abort poll
             pass
 
     ShutDown()
@@ -656,6 +657,7 @@ def ShutDown():
         # Shutdown
         FullShutdown = False
         utils.SystemShutdown = True
+        ce_idle.notify_shutdown() # [CE-OPT] Wake sleeping threads immediately
         utils.FavoriteQueue.put("QUIT")
         player.ItemsUpdateQueue.put("QUIT")
         wait_PlayerEventsQueue()
@@ -672,6 +674,7 @@ def ShutDown():
 
     player.PlayerEventsQueue.put("QUIT")
     utils.SystemShutdown = True
+    ce_idle.notify_shutdown() # [CE-OPT] Wake sleeping threads immediately
     utils.unset_SyncLock()
     utils.NextGenOnline.set()
     SettingsChangedEvent.set()

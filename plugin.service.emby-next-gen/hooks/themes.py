@@ -7,6 +7,7 @@ import xbmcvfs
 from helper import utils, player, queue, playerops
 from emby import listitem, metadata
 from database import dbio
+from ce_opt import idle_opt as ce_idle # [CE-OPT]
 VolumeFade = player.Volume
 VolumeFadeInInterrupt = -1
 ThemeQueue = queue.Queue()
@@ -454,7 +455,8 @@ def PositionTracker():
     if utils.DebugLog: xbmc.log("EMBY.monitor.themes: THREAD: --->[ position tracker ]", 1) # LOGDEBUG
 
     while not utils.SystemShutdown:
-        if utils.sleep(1):
+        SleepSec = ce_idle.get_interval("IDLE_THEME_DISABLED_POLL_SEC", 1.0) if (not utils.theme_enable_audio and not utils.theme_enable_video) else 1 # [CE-OPT] Sleep longer when themes are disabled
+        if utils.sleep(SleepSec):
             break
 
         if not Theme["EndTimeTicks"]:
@@ -500,7 +502,7 @@ def monitor_Themes():
 
         with utils.SafeLock(utils.SettingsChangedCondition):
             while not utils.theme_enable_audio and not utils.theme_enable_video:
-                utils.SettingsChangedCondition.wait(timeout=0.1)
+                utils.SettingsChangedCondition.wait(timeout=ce_idle.get_interval("IDLE_THEME_WAIT_SEC", 0.1)) # [CE-OPT] Reduce 10Hz idle condition wakeups
 
                 if utils.SystemShutdown:
                     ThemeQueue.put("QUIT")
