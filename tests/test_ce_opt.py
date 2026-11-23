@@ -18,7 +18,7 @@ ADDON_ROOT = Path(__file__).resolve().parent.parent / "plugin.service.emby-next-
 if str(ADDON_ROOT) not in sys.path:
     sys.path.insert(0, str(ADDON_ROOT))
 
-from ce_opt import artwork, config, db_indexes, strm  # noqa: E402
+from ce_opt import artwork, config, db_indexes, strm, sync_fast  # noqa: E402
 
 
 def _make_png(width, height):
@@ -364,6 +364,123 @@ class StrmFastPathTest(unittest.TestCase):
         config.STRM_FAST_PATH = False
         self.assertFalse(strm.should_skip_remote_head(meta_http, lan_src, followhttp=False))
         self.assertFalse(strm.should_direct_redirect_http(meta_http, lan_src, "videos/1/stream?static=true", False))
+
+
+class SyncFastTest(unittest.TestCase):
+    def setUp(self):
+        self._saved = {
+            "ENABLED": config.ENABLED,
+            "SYNC_SKIP_DISABLED_THEMES": config.SYNC_SKIP_DISABLED_THEMES,
+            "SYNC_THROTTLE_PROGRESS": config.SYNC_THROTTLE_PROGRESS,
+            "SYNC_DEDUP_PERSON_ART": config.SYNC_DEDUP_PERSON_ART,
+            "SYNC_SKIP_NOIMAGE_CHAPTERS": config.SYNC_SKIP_NOIMAGE_CHAPTERS,
+            "SYNC_PERSON_PAGING_OPT": config.SYNC_PERSON_PAGING_OPT,
+            "SYNC_TRUST_COMPANION_EMPTY": config.SYNC_TRUST_COMPANION_EMPTY,
+            "_OVERRIDE_LOADED": config._OVERRIDE_LOADED,
+        }
+        config._OVERRIDE_LOADED = True
+        config.ENABLED = True
+        sync_fast.clear_all_progress_state()
+
+    def tearDown(self):
+        for k, v in self._saved.items():
+            setattr(config, k, v)
+        sync_fast.clear_all_progress_state()
+
+    def test_should_enqueue_theme(self):
+        self.assertFalse(sync_fast.should_enqueue_theme(SimpleNamespace(theme_enable_audio=False, theme_enable_video=False)))
+        self.assertTrue(sync_fast.should_enqueue_theme(SimpleNamespace(theme_enable_audio=True, theme_enable_video=False)))
+        self.assertTrue(sync_fast.should_enqueue_theme(SimpleNamespace(theme_enable_audio=False, theme_enable_video=True)))
+        config.SYNC_SKIP_DISABLED_THEMES = False
+        self.assertTrue(sync_fast.should_enqueue_theme(SimpleNamespace(theme_enable_audio=False, theme_enable_video=False)))
+
+    def test_progress_throttling(self):
+        self.assertTrue(sync_fast.should_update_progress("sync1", 0, "Header", now=10.0))
+        self.assertFalse(sync_fast.should_update_progress("sync1", 10, "Header", now=10.05))
+        self.assertTrue(sync_fast.should_update_progress("sync1", 20, "Header", now=10.30))
+        self.assertTrue(sync_fast.should_update_progress("sync1", 25, "NewHeader", now=10.35))
+        self.assertTrue(sync_fast.should_update_progress("sync1", 100, "NewHeader", now=10.36))
+
+    def test_batch_set_links_actors_and_genres(self):
+        emby_conn = sqlite3.connect(":memory:")
+        video_conn = sqlite3.connect(":memory:")
+        emby_cur = emby_conn.cursor()
+        video_cur = video_conn.cursor()
+
+        emby_cur.execute("CREATE TABLE Person (EmbyId INTEGER PRIMARY KEY, KodiId INTEGER)")
+        emby_cur.execute("CREATE TABLE Genre (EmbyId INTEGER PRIMARY KEY, KodiId INTEGER)")
+        video_cur.execute(
+            "CREATE TABLE actor_link (actor_id INTEGER, media_id INTEGER, media_type TEXT, role TEXT, cast_order INTEGER, PRIMARY KEY(actor_id, media_id, media_type))"
+        )
+        video_cur.execute(
+            "CREATE TABLE genre_link (genre_id INTEGER, media_id INTEGER, media_type TEXT, PRIMARY KEY(genre_id, media_id, media_type))"
+        )
+
+        # Insert 520 actors to exercise >500 SQL chunking
+        emby_cur.executemany("INSERT INTO Person VALUES (?, ?)", [(1000 + i, 2000 + i) for i in range(520)])
+        emby_cur.execute("INSERT INTO Genre VALUES (10, 50), (11, 51)")
+
+        sqls = {
+            "emby": SimpleNamespace(cursor=emby_cur),
+            "video": SimpleNamespace(cursor=video_cur),
+        }
+
+        actors = [{"Id": str(1000 + i), "Role": f"Role {i}"} for i in range(520)]
+        actors.append({"Id": "999999", "Role": "Missing"})
+        written = sync_fast.batch_set_links(77, sqls, "movie", actors, "Person", "actor_link", "actor_id", True)
+        self.assertEqual(written, 520)
+
+        video_cur.execute("SELECT COUNT(*), MIN(cast_order), MAX(cast_order) FROM actor_link WHERE media_id = 77")
+        self.assertEqual(video_cur.fetchone(), (520, 0, 519))
+
+        written_genres = sync_fast.batch_set_links(
+            77, sqls, "movie", [{"Id": "10"}, {"Id": "11"}], "Genre", "genre_link", "genre_id", False
+        )
+        self.assertEqual(written_genres, 2)
+        video_cur.execute("SELECT genre_id FROM genre_link WHERE media_id = 77 ORDER BY genre_id")
+        self.assertEqual(video_cur.fetchall(), [(50,), (51,)])
+
+        emby_conn.close()
+        video_conn.close()
+
+    def test_dedup_person_artwork(self):
+        art = {
+            "thumb": "http://127.0.0.1:57342/picture/s/p-1-0-p-tag1",
+            "poster": "http://127.0.0.1:57342/picture/s/p-1-0-p-tag1",
+            "landscape": "http://127.0.0.1:57342/picture/s/p-1-0-p-tag1",
+            "fanart": {"fanart": "http://127.0.0.1:57342/picture/s/p-1-0-B-tag2"},
+            "clearart": None,
+        }
+        cleaned = sync_fast.dedup_person_artwork(art)
+        self.assertEqual(cleaned["thumb"], art["thumb"])
+        self.assertIsNone(cleaned["poster"])
+        self.assertIsNone(cleaned["landscape"])
+        self.assertEqual(cleaned["fanart"], art["fanart"])
+
+    def test_skip_noimage_chapter_preserves_intro_credits_and_images(self):
+        # Generic 5-min noimage chapter -> skip
+        self.assertTrue(sync_fast.should_skip_noimage_chapter("", False))
+        # Intro/Credits marker without ImageTag -> NEVER skip
+        self.assertFalse(sync_fast.should_skip_noimage_chapter("Intro_20Start", False))
+        self.assertFalse(sync_fast.should_skip_noimage_chapter("Credits", False))
+        # Real chapter with ImageTag -> NEVER skip
+        self.assertFalse(sync_fast.should_skip_noimage_chapter("", True))
+
+    def test_person_paging_and_companion_empty(self):
+        self.assertEqual(sync_fast.get_person_paging(100000), 5000)
+        self.assertEqual(sync_fast.get_person_paging(2000), 2000)
+
+        empty_q = {"ItemsAdded": [], "ItemsRemoved": [], "ItemsUpdated": [], "UserDataChanged": []}
+        non_empty_q = {"ItemsAdded": ["123"], "ItemsRemoved": [], "ItemsUpdated": [], "UserDataChanged": []}
+        self.assertTrue(sync_fast.is_companion_queue_empty(empty_q))
+        self.assertFalse(sync_fast.is_companion_queue_empty(non_empty_q))
+        self.assertFalse(sync_fast.is_companion_queue_empty({}))
+
+        self.assertTrue(sync_fast.should_query_start_sync_type(True, "Person"))
+        self.assertTrue(sync_fast.should_query_start_sync_type(True, "BoxSet"))
+        self.assertFalse(sync_fast.should_query_start_sync_type(True, "Movie"))
+        self.assertFalse(sync_fast.should_query_start_sync_type(True, "Episode"))
+        self.assertTrue(sync_fast.should_query_start_sync_type(False, "Movie"))
 
 
 if __name__ == "__main__":
