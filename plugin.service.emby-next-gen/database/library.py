@@ -5,6 +5,7 @@ import xbmc
 from core import movies, videos, musicvideo, folder, boxsets, genre, musicgenre, musicartist, musicalbum, audio, tag, person, studio, playlist, series, season, episode, trailer, photoalbum, photo, common
 from helper import utils, cache, artworkcache
 from hooks import favorites
+from ce_opt import sync_fast as ce_sync # [CE-OPT]
 from . import dbio
 
 LockPause = threading.Lock()
@@ -300,6 +301,10 @@ class Library:
                     utils.Dialog.ok(utils.addon_name, utils.Translate(33716))
 
                 xbmc.log(f"EMBY.database.library: --<[ {self.KodiStartSyncId} ] Kodi companion ]", 1) # LOGINFO
+                CompanionEmpty = ce_sync.is_companion_queue_empty(result) # [CE-OPT] Fast path when Companion reports zero changes
+                if CompanionEmpty: # [CE-OPT]
+                    xbmc.log(f"EMBY.database.library: [ {self.KodiStartSyncId} ] Kodi companion empty -> fast start sync", 1) # LOGINFO
+
                 ProgressBarTotal = len(self.LibrarySynced) / 100
                 ProgressBarIndex = 0
 
@@ -309,6 +314,10 @@ class Library:
                         utils.close_ProgressBar(self.KodiStartSyncId)
                         utils.SyncPause[self.ServerStartSyncId] = False
                         return
+
+                    if not ce_sync.should_query_start_sync_type(CompanionEmpty, LibrarySyncedEmbyType): # [CE-OPT] Skip unchanged types
+                        ProgressBarIndex += 1
+                        continue
 
                     xbmc.log(f"EMBY.database.library: [ {self.KodiStartSyncId} ] {LibrarySyncedName} / {LibrarySyncedEmbyType}", 1) # LOGINFO
                     LibraryName = ""
