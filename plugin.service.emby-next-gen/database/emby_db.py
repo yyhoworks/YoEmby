@@ -1,5 +1,6 @@
 import xbmc
 from helper import utils
+from ce_opt import db_indexes as ce_db_indexes # [CE-OPT]
 from . import common_db
 
 EmbyTypes = ("Movie", "Series", "Season", "Episode", "Audio", "MusicAlbum", "MusicArtist", "Genre", "MusicGenre", "Video", "MusicVideo", "BoxSet", "Tag", "Studio", "Playlist", "Person", "Trailer", "PhotoAlbum", "Photo", "Folder") # Folder must be on last position
@@ -338,6 +339,8 @@ class EmbyDatabase:
                 self.cursor.execute("ANALYZE")
                 self.cursor.connection.commit()
                 self.cursor.execute("BEGIN IMMEDIATE TRANSACTION")
+
+            ce_db_indexes.ensure_kodi_id_indexes(self.cursor) # [CE-OPT] Add KodiId/KodiFileId indexes
         except Exception as Error:
             xbmc.log(f"EMBY.database.emby_db: Database add index error: {Error}", 3) # LOGERROR
 
@@ -360,6 +363,7 @@ class EmbyDatabase:
             self.cursor.execute("DROP INDEX IF EXISTS idx_Video_EmbyParentType_KodiParentId")
             self.cursor.execute("DROP INDEX IF EXISTS idx_Audio_EmbyExtraType")
             self.cursor.execute("DROP INDEX IF EXISTS idx_Video_EmbyExtraType")
+            ce_db_indexes.drop_kodi_id_indexes(self.cursor) # [CE-OPT] Drop extra KodiId/KodiFileId indexes during bulk import
             self.cursor.execute("ANALYZE")
             self.cursor.connection.commit()
             self.cursor.execute("BEGIN IMMEDIATE TRANSACTION")

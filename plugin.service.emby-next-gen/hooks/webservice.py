@@ -6,6 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
+from ce_opt import config as ce_config # [CE-OPT]
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -22,7 +23,7 @@ KeyBoard = xbmc.Keyboard()
 DelayedContent = {}
 DelayedContentLock = threading.Lock()
 EmbyIdCurrentlyPlaying = 0
-MaxWorkers = utils.WebserviceWorkers
+MaxWorkers = max(utils.WebserviceWorkers, ce_config.get_value("WEBSERVICE_MIN_WORKERS", 10)) if ce_config.get_value("ENABLED") else utils.WebserviceWorkers # [CE-OPT] Ensure sufficient worker concurrency for posters
 WorkerQueue = queue.Queue()
 AsyncCommandQueue = queue.Queue()
 DelayedContentCondition = threading.Condition(threading.Lock())
@@ -112,7 +113,9 @@ def get_MediaHandler(Payload):
 def start():
     global Running
     global Socket
-    Running = True
+
+    if Running and Socket is not None: # [CE-OPT] Guard against duplicate bind (Errno 98)
+        return True
 
     try: # intercept multiple start by different threads (just precaution)
         LocalSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,6 +123,7 @@ def start():
         LocalSocket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         LocalSocket.bind(('127.0.0.1', 57342))
         Socket = LocalSocket
+        Running = True # [CE-OPT] Set Running only after bind succeeds
     except Exception as Error:
         xbmc.log(f"EMBY.hooks.webservice: Socket start (error) {Error}", 1) # LOGINFO
         return False
@@ -136,6 +140,7 @@ def start():
 
 def close():
     global Running
+    global Socket # [CE-OPT] Reset Socket reference on close
 
     if Running:
         Running = False
@@ -149,6 +154,7 @@ def close():
         except Exception as Error:
             if utils.DebugLog: xbmc.log(f"EMBY.hooks.webservice: Socket shutdown (error) {Error}", 1) # LOGINFO
 
+        Socket = None # [CE-OPT] Reset Socket reference on close
         xbmc.log("EMBY.hooks.webservice: Shutdown webservice", 1) # LOGINFO
         if utils.DebugLog: xbmc.log(f"EMBY.hooks.webservice (DEBUG): DelayedContent queue size: {len(DelayedContent)}", 1) # LOGDEBUG
 
@@ -1125,7 +1131,7 @@ def wait_for_Embyserver(client, ServerId):
 
             CounterOnlineCondintion = 0
 
-            while CounterOnlineCondintion >= 30: # 3 Seconds timeout
+            while CounterOnlineCondintion < 30: # [CE-OPT] Fix inverted timeout condition (was >= 30)
                 if utils.EmbyServerOnlineCondition.wait(timeout=0.1):
                     break
 

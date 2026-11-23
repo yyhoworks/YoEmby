@@ -1552,7 +1552,7 @@ class VideoDatabase:
 
             if Progress:
                 if CurrentProgress != Progress:
-                    self.cursor.execute("UPDATE bookmark SET timeInSeconds = ?, totalTimeInSeconds = ? WHERE idFile = ?", (Progress, Runtime, KodiFileId))
+                    self.cursor.execute("UPDATE bookmark SET timeInSeconds = ?, totalTimeInSeconds = ? WHERE idFile = ? AND type = ?", (Progress, Runtime, KodiFileId, "1")) # [CE-OPT] Restrict resume update to type=1 so chapter bookmarks are preserved
                     Update = True
             else:
                 self.cursor.execute("DELETE FROM bookmark WHERE idFile = ? AND type = ?", (KodiFileId, "1"))

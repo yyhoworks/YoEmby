@@ -3,6 +3,7 @@ import threading
 import xbmcvfs
 import xbmc
 from helper import utils
+from ce_opt import config as ce_config # [CE-OPT]
 from . import emby_db, video_db, music_db, texture_db, addon_db, common_db
 
 DBConnectionsRW = {}
@@ -106,7 +107,7 @@ def DBCloseRO(DBID, TaskId):
     if DBIDThreadID in DBConnectionsRO:
         DBConnectionsRO[DBIDThreadID][1].close()
         DBConnectionsRO[DBIDThreadID][0].close()
-        DBConnectionsRO[DBIDThreadID] = [None, None]
+        del DBConnectionsRO[DBIDThreadID] # [CE-OPT] Fix unbounded dict memory leak on RO connection close
         if utils.DebugLog: xbmc.log(f"EMBY.database.dbio (DEBUG): ---< DBRO: {DBIDThreadID}", 1) # LOGDEBUG
     else:
         xbmc.log(f"EMBY.database.dbio: DBIDThreadID not found {DBIDThreadID}", 3) # LOGERROR
@@ -138,6 +139,8 @@ def DBOpenRW(Databases, TaskId, SQLs):
                         DBConnectionsRW[DBID][0].execute("PRAGMA journal_mode=WAL")
                         DBConnectionsRW[DBID][0].execute("PRAGMA synchronous=NORMAL")
                         DBConnectionsRW[DBID][0].execute("PRAGMA secure_delete=OFF")
+                        if ce_config.get_value("ENABLED") and ce_config.get_value("DB_RW_CACHE_KB", 0) > 0: # [CE-OPT] Larger SQLite page cache for RW writes
+                            DBConnectionsRW[DBID][0].execute(f"PRAGMA cache_size=-{int(ce_config.get_value('DB_RW_CACHE_KB'))}")
                         DBConnectionsRW[DBID][1].execute("BEGIN IMMEDIATE TRANSACTION")
                         break
                     except:

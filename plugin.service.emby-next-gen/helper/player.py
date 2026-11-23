@@ -268,11 +268,12 @@ def PlayerCommands():
                                 MediaIndex = 0
 
                                 for MediaSourceIndex, MediaSource in enumerate(MediaSources):
-                                    VideoStreamsWidth = int(VideoStreams[0][4]) # Resolution Width
+                                    if MediaSourceIndex < len(VideoStreams) and VideoStreams[MediaSourceIndex][4]: # [CE-OPT] Fix hardcoded VideoStreams[0] index and guard empty streams
+                                        VideoStreamsWidth = int(VideoStreams[MediaSourceIndex][4]) # Resolution Width
 
-                                    if HighestResolution < VideoStreamsWidth:
-                                        HighestResolution = VideoStreamsWidth
-                                        MediaIndex = MediaSourceIndex
+                                        if HighestResolution < VideoStreamsWidth:
+                                            HighestResolution = VideoStreamsWidth
+                                            MediaIndex = MediaSourceIndex
                             else: # Manual select mediasource
                                 Selection = []
 
