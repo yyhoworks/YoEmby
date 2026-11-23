@@ -18,7 +18,7 @@ ADDON_ROOT = Path(__file__).resolve().parent.parent / "plugin.service.emby-next-
 if str(ADDON_ROOT) not in sys.path:
     sys.path.insert(0, str(ADDON_ROOT))
 
-from ce_opt import artwork, config, db_indexes, strm, sync_fast  # noqa: E402
+from ce_opt import artwork, config, db_indexes, idle_opt, stream_meta, strm, sync_fast  # noqa: E402
 
 
 def _make_png(width, height):
@@ -481,6 +481,169 @@ class SyncFastTest(unittest.TestCase):
         self.assertFalse(sync_fast.should_query_start_sync_type(True, "Movie"))
         self.assertFalse(sync_fast.should_query_start_sync_type(True, "Episode"))
         self.assertTrue(sync_fast.should_query_start_sync_type(False, "Movie"))
+
+
+class StreamMetaTest(unittest.TestCase):
+    def setUp(self):
+        self._saved = {
+            "ENABLED": config.ENABLED,
+            "STREAM_META_ENHANCED": config.STREAM_META_ENHANCED,
+            "STREAM_STRM_NAME_FALLBACK": config.STREAM_STRM_NAME_FALLBACK,
+            "STREAM_PLAYBACK_BACKFILL": config.STREAM_PLAYBACK_BACKFILL,
+            "_OVERRIDE_LOADED": config._OVERRIDE_LOADED,
+        }
+        config._OVERRIDE_LOADED = True
+        config.ENABLED = True
+        config.STREAM_META_ENHANCED = True
+        config.STREAM_STRM_NAME_FALLBACK = True
+        config.STREAM_PLAYBACK_BACKFILL = True
+
+    def tearDown(self):
+        for k, v in self._saved.items():
+            setattr(config, k, v)
+
+    def test_audio_codec_and_hdr10plus_mapping(self):
+        self.assertEqual(
+            stream_meta.normalize_audio_codec({"Profile": "Dolby TrueHD + Dolby Atmos"}, "truehd"),
+            "truehd_atmos",
+        )
+        self.assertEqual(
+            stream_meta.normalize_audio_codec({"DisplayTitle": "English E-AC3 5.1 Atmos"}, "eac3"),
+            "eac3_ddp_atmos",
+        )
+        self.assertEqual(
+            stream_meta.normalize_audio_codec({"Profile": "DTS-HD MA + DTS:X"}, "dts"),
+            "dtsx",
+        )
+        self.assertEqual(
+            stream_meta.normalize_audio_codec({"Profile": "DTS-HD MA"}, "dts"),
+            "dtshd_ma",
+        )
+        self.assertEqual(
+            stream_meta.normalize_audio_codec({"DisplayTitle": "English AAC 2.0"}, "aac"),
+            "aac",
+        )
+
+        self.assertEqual(
+            stream_meta.detect_hdr_type({"VideoRange": "HDR10+", "ExtendedVideoType": "Hdr10Plus"}),
+            ("hdr10plus", ""),
+        )
+        self.assertEqual(
+            stream_meta.detect_hdr_type({"VideoRange": "DOVIWithHDR10", "ExtendedVideoSubType": "DoviProfile81"}),
+            ("dolbyvision", "8.1"),
+        )
+        self.assertEqual(
+            stream_meta.detect_hdr_type({"VideoRange": "HDR 10"}),
+            ("hdr10", ""),
+        )
+        self.assertEqual(
+            stream_meta.detect_hdr_type({"VideoRange": "HLG"}),
+            ("hlg", ""),
+        )
+        self.assertEqual(
+            stream_meta.detect_hdr_type({"VideoRange": "SDR"}),
+            (None, ""),
+        )
+
+    def test_infer_streams_from_name_only_when_empty(self):
+        ms = {"Name": "Dune.2024.2160p.BluRay.HDR10+.TrueHD.7.1.Atmos.x265", "KodiStreams": {"Video": [], "Audio": [], "Subtitle": []}}
+        item = {"Name": "Dune", "Path": "http://192.168.1.168:8796/s/abc"}
+        self.assertTrue(stream_meta.infer_streams_from_name(item, ms))
+        self.assertEqual(ms["KodiStreams"]["Video"][0]["width"], 3840)
+        self.assertEqual(ms["KodiStreams"]["Video"][0]["codec"], "hevc")
+        self.assertEqual(ms["KodiStreams"]["Video"][0]["hdrtype"], "hdr10plus")
+        self.assertEqual(ms["KodiStreams"]["Audio"][0]["codec"], "truehd_atmos")
+        self.assertEqual(ms["KodiStreams"]["Audio"][0]["channels"], 8)
+
+        # Must not overwrite existing probed streams
+        self.assertFalse(stream_meta.infer_streams_from_name(item, ms))
+
+    def test_playback_backfill_only_when_missing(self):
+        conn = sqlite3.connect(":memory:")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE movie (idMovie INTEGER PRIMARY KEY, idFile INTEGER)")
+        cur.execute("CREATE TABLE streamdetails (idFile INTEGER, iStreamType INTEGER)")
+        cur.execute("INSERT INTO movie VALUES (10, 500)")
+        conn.commit()
+
+        added = []
+
+        class FakeVideoDB:
+            def __init__(self, cursor):
+                self.cursor = cursor
+
+            def add_streams(self, file_id, streams, duration):
+                added.append((file_id, streams, duration))
+                self.cursor.execute("INSERT INTO streamdetails VALUES (?, 0)", (file_id,))
+
+        dbio_stub = SimpleNamespace(
+            DBOpenRO=lambda _db, _task: FakeVideoDB(cur),
+            DBCloseRO=lambda _db, _task: None,
+            DBOpenRW=lambda _db, _task, sqls: sqls.__setitem__("video", FakeVideoDB(cur)),
+            DBCloseRW=lambda _db, _task, _sqls: None,
+        )
+        labels = {
+            "VideoPlayer.VideoCodec": "hevc",
+            "VideoPlayer.VideoResolution": "4K",
+            "VideoPlayer.VideoAspect": "2.39",
+            "VideoPlayer.HdrType": "dolbyvision",
+            "VideoPlayer.AudioCodec": "truehd_atmos",
+            "VideoPlayer.AudioChannels": "8",
+            "VideoPlayer.AudioLanguage": "eng",
+            "Player.Duration": "02:15:30",
+        }
+        xbmc_stub = SimpleNamespace(
+            sleep=lambda _ms: None,
+            getInfoLabel=lambda key: labels.get(key, ""),
+            log=lambda *_args: None,
+        )
+
+        self.assertTrue(stream_meta.maybe_backfill_from_player(10, "movie", xbmc_stub, dbio_stub))
+        self.assertEqual(len(added), 1)
+        self.assertEqual(added[0][0], 500)
+        self.assertEqual(added[0][1]["Video"][0]["width"], 3840)
+        self.assertEqual(added[0][1]["Video"][0]["hdrtype"], "dolbyvision")
+        self.assertEqual(added[0][2], 8130)
+
+        # Second call sees existing video streamdetails and is a no-op
+        self.assertFalse(stream_meta.maybe_backfill_from_player(10, "movie", xbmc_stub, dbio_stub))
+        self.assertEqual(len(added), 1)
+        conn.close()
+
+
+class IdleOptTest(unittest.TestCase):
+    def setUp(self):
+        self._orig_enabled = config.ENABLED
+        self._orig_idle = config.IDLE_WAKEUP_OPT
+        config._OVERRIDE_LOADED = True
+        config.ENABLED = True
+        config.IDLE_WAKEUP_OPT = True
+        idle_opt.reset_shutdown()
+
+    def tearDown(self):
+        config.ENABLED = self._orig_enabled
+        config.IDLE_WAKEUP_OPT = self._orig_idle
+        idle_opt.reset_shutdown()
+
+    def test_get_interval_respects_toggle(self):
+        self.assertEqual(idle_opt.get_interval("IDLE_WEBSERVICE_TIMEOUT_SEC", 0.1), 0.5)
+        config.IDLE_WAKEUP_OPT = False
+        self.assertEqual(idle_opt.get_interval("IDLE_WEBSERVICE_TIMEOUT_SEC", 0.1), 0.1)
+
+    def test_interruptible_sleep_wakes_immediately_on_shutdown(self):
+        import time
+
+        def trigger():
+            time.sleep(0.05)
+            idle_opt.notify_shutdown()
+
+        t = threading.Thread(target=trigger, daemon=True)
+        t.start()
+        t0 = time.monotonic()
+        aborted = idle_opt.interruptible_sleep(5.0, lambda: False)
+        elapsed = time.monotonic() - t0
+        self.assertTrue(aborted)
+        self.assertLess(elapsed, 0.5)
 
 
 if __name__ == "__main__":
