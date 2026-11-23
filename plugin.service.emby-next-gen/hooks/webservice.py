@@ -6,7 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
-from ce_opt import config as ce_config # [CE-OPT]
+from ce_opt import config as ce_config, artwork as ce_artwork # [CE-OPT]
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -640,11 +640,13 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
 
     # Load parameters from url request
     MetaData = metadata.load_MetaData(Payload, isPicture, isAudio)
-    MetaData['ETag'] = f'{str(uuid.uuid4()).replace("-", "")}{Payload[-5:]}'
 
-    if not MetaData: # Invalid request
+    if not MetaData: # [CE-OPT] Check empty MetaData before assigning ETag
         client.send(sendNotFound)
         return
+
+    if not isPicture: # [CE-OPT] Skip unused uuid4 generation on picture requests
+        MetaData['ETag'] = f'{str(uuid.uuid4()).replace("-", "")}{Payload[-5:]}'
 
     if MetaData['Type'] in ("movie", "episode", "musicvideo", "tvchannel", "video"):
         playerops.PlayerId = 1
@@ -666,12 +668,8 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
         if utils.DebugLog: xbmc.log(f"EMBY.hooks.webservice (DEBUG): Load artwork: {Payload}", 1) # LOGDEBUG
 
         if not MetaData['Overlay']:
-            if utils.enableCoverArt:
-                Enhancers = "&EnableImageEnhancers=True"
-            else:
-                Enhancers = "&EnableImageEnhancers=False"
-
-            client.send(f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {utils.EmbyServers[MetaData['ServerId']].ServerData['ServerUrl']}/emby/Items/{MetaData['EmbyId']}/Images/{MetaData['ImageType']}/{MetaData['ImageIndex']}?&api_key={utils.EmbyServers[MetaData['ServerId']].ServerData['AccessToken']}{Enhancers}\r\nAccept-Ranges: none\r\nContent-Length: 0\r\n\r\n".encode())
+            Location = ce_artwork.build_picture_redirect_from_metadata(MetaData, utils.EmbyServers[MetaData['ServerId']].ServerData, utils) # [CE-OPT] Include tag, maxWidth and quality in picture 307 redirect
+            client.send(f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {Location}\r\nAccept-Ranges: none\r\nContent-Length: 0\r\n\r\n".encode())
             return
 
         BinaryData, ContentType, _ = utils.image_overlay(MetaData['ImageTag'], MetaData['ServerId'], MetaData['EmbyId'], MetaData['ImageType'], MetaData['ImageIndex'], MetaData['Overlay'])

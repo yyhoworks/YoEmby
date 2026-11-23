@@ -3,12 +3,17 @@ from urllib.parse import unquote
 import xbmcvfs
 import xbmc
 from database import dbio
+from ce_opt import config as ce_config, artwork as ce_artwork # [CE-OPT]
 from . import utils
 
 EmbyArtworkIDs = {"p": "Primary", "a": "Art", "b": "Banner", "d": "Disc", "l": "Logo", "t": "Thumb", "B": "Backdrop", "c": "Chapter"}
 
 # Cache all entries
 def CacheAllEntries(urls, WorkerName):
+    if ce_config.is_enabled("ARTWORK_CACHE_CONCURRENT"): # [CE-OPT] Concurrent keep-alive artwork pre-cache
+        ce_artwork.cache_all_entries_concurrent(urls, WorkerName, utils, add_textures, xbmcvfs, xbmc)
+        return
+
     total = len(urls)
     ArtworkCacheItems = 1000 * [{}]
     ArtworkCacheIndex = 0
@@ -111,6 +116,14 @@ def add_textures(ArtworkCacheItems):
     dbio.DBCloseRW("texture", "artwork_cache", SQLs)
 
 def get_image_metadata(ImageBinaryData, Hash):
+    if ce_config.get_value("ENABLED"): # [CE-OPT] Accurate JPEG SOF + PNG/WebP/GIF parser
+        width, height, imageformat = ce_artwork.parse_image_metadata(ImageBinaryData)
+        if width == 0:
+            xbmc.log(f"EMBY.helper.artworkcache: Artwork cache: invalid image format/size: {Hash} / {len(ImageBinaryData) if ImageBinaryData else 0}", 2) # LOGWARNING
+        elif utils.DebugLog:
+            xbmc.log(f"EMBY.helper.artworkcache (DEBUG): Artwork cache image data: {width} / {height} / {Hash}", 1) # LOGDEBUG
+        return width, height, imageformat
+
     height = 0
     width = 0
     imageformat = ""
