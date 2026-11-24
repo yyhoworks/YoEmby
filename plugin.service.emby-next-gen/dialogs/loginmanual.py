@@ -72,7 +72,7 @@ class LoginManual(xbmcgui.WindowXMLDialog):
             self.close()
 
     def _add_editcontrol(self, x, y, height, width, password):
-        control = xbmcgui.ControlEdit(0, 0, 0, 0, label="", font="font13", textColor="FF52b54b", disabledColor="FF888888", focusTexture="-", noFocusTexture="-")
+        control = xbmcgui.ControlEdit(0, 0, 0, 0, label="", font="font13", textColor="FFF5F5F7", disabledColor="FF888888", focusTexture="-", noFocusTexture="-")  # [CE-OPT] Plan A neutral high-contrast input text
         control.setPosition(x, y)
         control.setHeight(height)
         control.setWidth(width)

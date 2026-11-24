@@ -291,7 +291,7 @@ class YoEmbyHealthDashboard(_BASE_WINDOW_DIALOG):
         self.setProperty('YoEmby.Page', str(self._page))
         self._set_label(
             CTRL_FOOTER_HINT,
-            '← → 切换分页（第 {} / {} 页）· 确定执行维护 · 返回退出'.format(self._page + 1, len(pages)),
+            '顶部标签 / 翻页键切页（第 {} / {} 页）· 确定执行维护 · 返回退出'.format(self._page + 1, len(pages)),
         )
         panel = self.getControl(CTRL_CARD_PANEL)
         panel.reset()
@@ -366,7 +366,24 @@ class YoEmbyHealthDashboard(_BASE_WINDOW_DIALOG):
         elif control_id == CTRL_CARD_PANEL:
             item = self.getControl(CTRL_CARD_PANEL).getSelectedItem()
             if item is not None:
-                self._run_action(item.getProperty('action_id'))
+                action_id = item.getProperty('action_id')
+                if action_id:
+                    self._run_action(action_id)
+                else:
+                    self._notify_readonly_card(item.getLabel())
+
+    def _notify_readonly_card(self, label):
+        if xbmcgui is None:
+            return
+        try:
+            dlg = xbmcgui.Dialog()
+            notify = getattr(dlg, 'notification', None)
+            if callable(notify):
+                title = str(label or '该项')
+                icon = getattr(xbmcgui, 'NOTIFICATION_INFO', 'info')
+                notify('YoEmby', '{} 为只读指标，可在第 3 页执行维护'.format(title), icon, 2200, False)
+        except Exception:
+            pass
 
     def onAction(self, action):
         action_id = action.getId()

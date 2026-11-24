@@ -1,13 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<!-- [CE-OPT] Plan A neutral obsidian server selector (fixes stray &gt;, horizontal close & easin typo) -->
 <window>
     <defaultcontrol always="true">205</defaultcontrol>
     <animation type="WindowOpen" reversible="false">
-        <effect type="zoom" start="80" end="100" center="960,540" delay="160" tween="circle" easin="out" time="240" />
-        <effect type="fade" delay="160" end="100" time="240" />
+        <effect type="zoom" start="88" end="100" center="960,540" delay="100" tween="circle" easing="out" time="220" />
+        <effect type="fade" delay="100" end="100" time="220" />
     </animation>
     <animation type="WindowClose" reversible="false">
-        <effect type="zoom" start="100" end="80" center="960,540" easing="in" tween="circle" easin="out" time="240" />
-        <effect type="fade" start="100" end="0" time="240" />
+        <effect type="zoom" start="100" end="88" center="960,540" tween="circle" easing="in" time="180" />
+        <effect type="fade" start="100" end="0" time="180" />
     </animation>
     <controls>
         <control type="group">
@@ -18,16 +19,16 @@
                 <right>-200</right>
                 <texture colordiffuse="CC000000">white.png</texture>
                 <aspectratio>stretch</aspectratio>
-                <animation effect="fade" end="100" time="200">WindowOpen</animation>
-                <animation effect="fade" start="100" end="0" time="200">WindowClose</animation>
+                <animation effect="fade" end="100" time="180">WindowOpen</animation>
+                <animation effect="fade" start="100" end="0" time="180">WindowClose</animation>
             </control>
             <control type="group">
                 <centerleft>50%</centerleft>
                 <centertop>50%</centertop>
-                <width>520</width>
-                <height>525</height>
+                <width>560</width>
+                <height>540</height>
                 <control type="group">
-                    <top>-30</top>
+                    <top>-32</top>
                     <control type="image">
                         <left>20</left>
                         <width>100%</width>
@@ -45,103 +46,140 @@
                 </control>
                 <control type="image">
                     <width>100%</width>
-                    <height>525</height>
-                    <texture colordiffuse="ff222326" border="10">dialogs/dialog_back.png</texture>
+                    <height>540</height>
+                    <texture colordiffuse="F2181C24" border="10">dialogs/dialog_back.png</texture>
                 </control>
                 <control type="group">
                     <centerleft>50%</centerleft>
-                    <top>10</top>
-                    <width>510</width>
-                    <height>515</height>
+                    <top>12</top>
+                    <width>536</width>
+                    <height>516</height>
                     <control type="grouplist" id="100">
                         <orientation>vertical</orientation>
                         <itemgap>0</itemgap>
                         <control type="label">
                             <width>100%</width>
-                            <height>75</height>
+                            <height>72</height>
                             <aligny>center</aligny>
-                            <textoffsetx>20</textoffsetx>
+                            <textoffsetx>22</textoffsetx>
                             <font>font13</font>
-                            <textcolor>white</textcolor>
-                            <textshadow>66000000</textshadow>
+                            <textcolor>FFF5F5F7</textcolor>
                             <label>[B]$ADDON[plugin.service.emby-next-gen 30607][/B]</label>
                         </control>
                         <control type="group" id="101">
-                            <height>200</height>
+                            <height>204</height>
                             <control type="list" id="155">
                                 <centerleft>50%</centerleft>
-                                <width>510</width>
-                                <height>195</height>
+                                <width>516</width>
+                                <height>198</height>
                                 <onup>noop</onup>
-                                <onleft>close</onleft>
-                                <onright>close</onright>
+                                <onleft>noop</onleft>
+                                <onright>noop</onright>
                                 <ondown>205</ondown>
-                                <itemlayout width="510" height="65">
+                                <itemlayout width="516" height="66">
+                                    <control type="image">
+                                        <left>4</left>
+                                        <top>3</top>
+                                        <width>508</width>
+                                        <height>60</height>
+                                        <texture colordiffuse="12FFFFFF">white.png</texture>
+                                    </control>
                                     <control type="group">
-                                        <left>20</left>
-                                        <top>5</top>
-                                        <width>40</width>
+                                        <left>22</left>
+                                        <top>13</top>
+                                        <width>36</width>
+                                        <height>40</height>
                                         <control type="image">
                                             <aspectratio>keep</aspectratio>
-                                            <texture>network.png</texture>
+                                            <texture colordiffuse="FFB8C0CC">network.png</texture>
                                             <visible>String.IsEqual(ListItem.Property(server_type),network)</visible>
                                         </control>
                                         <control type="image">
                                             <aspectratio>keep</aspectratio>
-                                            <texture>wifi.png</texture>
+                                            <texture colordiffuse="FFB8C0CC">wifi.png</texture>
                                             <visible>String.IsEqual(ListItem.Property(server_type),wifi)</visible>
                                         </control>
                                     </control>
                                     <control type="label">
-                                        <left>50</left>
-                                        <height>65</height>
+                                        <left>62</left>
+                                        <width>438</width>
+                                        <height>66</height>
                                         <aligny>center</aligny>
-                                        <textoffsetx>20</textoffsetx>
+                                        <textoffsetx>12</textoffsetx>
                                         <font>font13</font>
-                                        <textcolor>ffe1e1e1</textcolor>
-                                        <shadowcolor>66000000</shadowcolor>
+                                        <textcolor>FFE2E8F0</textcolor>
                                         <label>$INFO[ListItem.Label]</label>
                                     </control>
                                 </itemlayout>
-                                <focusedlayout width="510" height="65">
+                                <focusedlayout width="516" height="66">
                                     <control type="image">
-                                        <width>100%</width>
-                                        <height>65</height>
-                                        <texture colordiffuse="ff222326">white.png</texture>
+                                        <left>4</left>
+                                        <top>3</top>
+                                        <width>508</width>
+                                        <height>60</height>
+                                        <texture colordiffuse="18FFFFFF">white.png</texture>
                                         <visible>!Control.HasFocus(155)</visible>
                                     </control>
                                     <control type="image">
-                                        <width>100%</width>
-                                        <height>65</height>
-                                        <texture colordiffuse="ff303034">white.png</texture>
+                                        <left>4</left>
+                                        <top>3</top>
+                                        <width>508</width>
+                                        <height>60</height>
+                                        <texture colordiffuse="FFF1F3F5">white.png</texture>
                                         <visible>Control.HasFocus(155)</visible>
                                     </control>
                                     <control type="group">
-                                        <left>20</left>
-                                        <width>40</width>
+                                        <left>22</left>
+                                        <top>13</top>
+                                        <width>36</width>
+                                        <height>40</height>
                                         <control type="image">
                                             <description>Network</description>
                                             <aspectratio>keep</aspectratio>
-                                            <texture>network.png</texture>
-                                            <visible>String.IsEqual(ListItem.Property(server_type),network)</visible>
+                                            <texture colordiffuse="FF12161F">network.png</texture>
+                                            <visible>String.IsEqual(ListItem.Property(server_type),network) + Control.HasFocus(155)</visible>
+                                        </control>
+                                        <control type="image">
+                                            <description>Network unfocused</description>
+                                            <aspectratio>keep</aspectratio>
+                                            <texture colordiffuse="FFB8C0CC">network.png</texture>
+                                            <visible>String.IsEqual(ListItem.Property(server_type),network) + !Control.HasFocus(155)</visible>
                                         </control>
                                         <control type="image">
                                             <description>Wifi</description>
                                             <aspectratio>keep</aspectratio>
-                                            <texture>wifi.png</texture>
-                                            <visible>String.IsEqual(ListItem.Property(server_type),wifi)</visible>
+                                            <texture colordiffuse="FF12161F">wifi.png</texture>
+                                            <visible>String.IsEqual(ListItem.Property(server_type),wifi) + Control.HasFocus(155)</visible>
+                                        </control>
+                                        <control type="image">
+                                            <description>Wifi unfocused</description>
+                                            <aspectratio>keep</aspectratio>
+                                            <texture colordiffuse="FFB8C0CC">wifi.png</texture>
+                                            <visible>String.IsEqual(ListItem.Property(server_type),wifi) + !Control.HasFocus(155)</visible>
                                         </control>
                                     </control>
                                     <control type="label">
-                                        <left>50</left>
-                                        <height>65</height>
+                                        <left>62</left>
+                                        <width>438</width>
+                                        <height>66</height>
                                         <aligny>center</aligny>
-                                        <textoffsetx>20</textoffsetx>
+                                        <textoffsetx>12</textoffsetx>
                                         <font>font13</font>
                                         <scroll>true</scroll>
-                                        <textcolor>ffe1e1e1</textcolor>
-                                        <shadowcolor>66000000</shadowcolor>
+                                        <textcolor>FF12161F</textcolor>
                                         <label>$INFO[ListItem.Label]</label>
+                                        <visible>Control.HasFocus(155)</visible>
+                                    </control>
+                                    <control type="label">
+                                        <left>62</left>
+                                        <width>438</width>
+                                        <height>66</height>
+                                        <aligny>center</aligny>
+                                        <textoffsetx>12</textoffsetx>
+                                        <font>font13</font>
+                                        <textcolor>FFE2E8F0</textcolor>
+                                        <label>$INFO[ListItem.Label]</label>
+                                        <visible>!Control.HasFocus(155)</visible>
                                     </control>
                                 </focusedlayout>
                             </control>
@@ -152,88 +190,84 @@
                                 <width>120</width>
                                 <height>200</height>
                                 <visible>false</visible>
-                                <texture colordiffuse="ff52b54b">spinner.gif</texture>
+                                <texture colordiffuse="FFE2E8F0">spinner.gif</texture>
                                 <aspectratio>keep</aspectratio>
                             </control>
                         </control>
                         <control type="label" id="102">
                             <description>spacer</description>
-                            <height>20</height>
+                            <height>18</height>
                         </control>
                         <control type="button" id="205">
                             <label>[B]$ADDON[plugin.service.emby-next-gen 30600][/B]</label>
-                            <width>476</width>
-                            <height>65</height>
+                            <width>500</width>
+                            <height>64</height>
                             <font>font13</font>
-                            <textcolor>ffe1e1e1</textcolor>
-                            <focusedcolor>white</focusedcolor>
-                            <selectedcolor>ffe1e1e1</selectedcolor>
-                            <shadowcolor>66000000</shadowcolor>
+                            <textcolor>FFE2E8F0</textcolor>
+                            <focusedcolor>FF12161F</focusedcolor>
+                            <selectedcolor>FFE2E8F0</selectedcolor>
                             <textoffsetx>20</textoffsetx>
                             <aligny>center</aligny>
                             <align>center</align>
-                            <texturefocus border="10" colordiffuse="ff52b54b">buttons/shadow_smallbutton.png</texturefocus>
-                            <texturenofocus border="10" colordiffuse="ff464646">buttons/shadow_smallbutton.png</texturenofocus>
+                            <texturefocus border="10" colordiffuse="FFFFFFFF">buttons/shadow_smallbutton.png</texturefocus>
+                            <texturenofocus border="10" colordiffuse="24FFFFFF">buttons/shadow_smallbutton.png</texturenofocus>
                             <pulseonselect>no</pulseonselect>
                             <onup>155</onup>
-                            <animation effect="slide" time="0" end="17,0" condition="true">Conditional</animation>
+                            <animation effect="slide" time="0" end="18,0" condition="true">Conditional</animation>
                         </control>
                         <control type="button" id="206">
                             <label>[B]$ADDON[plugin.service.emby-next-gen 30611][/B]</label>
-                            <width>476</width>
-                            <height>65</height>
+                            <width>500</width>
+                            <height>64</height>
                             <font>font13</font>
-                            <textcolor>ffe1e1e1</textcolor>
-                            <focusedcolor>white</focusedcolor>
-                            <selectedcolor>ffe1e1e1</selectedcolor>
-                            <shadowcolor>66000000</shadowcolor>
+                            <textcolor>FFE2E8F0</textcolor>
+                            <focusedcolor>FF12161F</focusedcolor>
+                            <selectedcolor>FFE2E8F0</selectedcolor>
                             <textoffsetx>20</textoffsetx>
                             <aligny>center</aligny>
                             <align>center</align>
-                            <texturefocus border="10" colordiffuse="ff52b54b">buttons/shadow_smallbutton.png</texturefocus>
-                            <texturenofocus border="10" colordiffuse="ff464646">buttons/shadow_smallbutton.png</texturenofocus>
+                            <texturefocus border="10" colordiffuse="FFFFFFFF">buttons/shadow_smallbutton.png</texturefocus>
+                            <texturenofocus border="10" colordiffuse="24FFFFFF">buttons/shadow_smallbutton.png</texturenofocus>
                             <pulseonselect>no</pulseonselect>
                             <onup>155</onup>
-                            <animation effect="slide" time="0" end="17,0" condition="true">Conditional</animation>
+                            <animation effect="slide" time="0" end="18,0" condition="true">Conditional</animation>
                         </control>
                         <control type="button" id="201">
                             <label>[B]$ADDON[plugin.service.emby-next-gen 30606][/B]</label>
-                            <width>476</width>
-                            <height>65</height>
+                            <width>500</width>
+                            <height>64</height>
                             <font>font13</font>
-                            <textcolor>ffe1e1e1</textcolor>
-                            <focusedcolor>white</focusedcolor>
-                            <selectedcolor>ffe1e1e1</selectedcolor>
-                            <shadowcolor>66000000</shadowcolor>
+                            <textcolor>FFB0B8C4</textcolor>
+                            <focusedcolor>FF12161F</focusedcolor>
+                            <selectedcolor>FFB0B8C4</selectedcolor>
                             <textoffsetx>20</textoffsetx>
                             <aligny>center</aligny>
                             <align>center</align>
                             <onup>155</onup>
-                            <texturefocus border="10" colordiffuse="ff52b54b">buttons/shadow_smallbutton.png</texturefocus>
-                            <texturenofocus border="10" colordiffuse="ff464646">buttons/shadow_smallbutton.png</texturenofocus>
+                            <texturefocus border="10" colordiffuse="FFFFFFFF">buttons/shadow_smallbutton.png</texturefocus>
+                            <texturenofocus border="10" colordiffuse="14FFFFFF">buttons/shadow_smallbutton.png</texturenofocus>
                             <pulseonselect>no</pulseonselect>
-                            <animation effect="slide" time="0" end="17,0" condition="true">Conditional</animation>
+                            <animation effect="slide" time="0" end="18,0" condition="true">Conditional</animation>
                         </control>
                     </control>
                 </control>
                 <control type="group" id="202">
-                    <top>525</top>
+                    <top>548</top>
                     <visible>false</visible>
                     <control type="image">
                         <width>100%</width>
-                        <height>70</height>
-                        <texture colordiffuse="ff222326" border="10">dialogs/dialog_back.png</texture>
+                        <height>68</height>
+                        <texture colordiffuse="F22A1B20" border="10">dialogs/dialog_back.png</texture>
                     </control>
                     <control type="label" id="203">
-                        <top>10</top>
+                        <top>9</top>
                         <height>50</height>
-                        <textcolor>ffe1e1e1</textcolor>
+                        <textcolor>FFFECACA</textcolor>
                         <scroll>true</scroll>
-                        <shadowcolor>66000000</shadowcolor>
                         <font>font12</font>
                         <textoffsetx>20</textoffsetx>
                         <aligny>center</aligny>
-                        <align>center</align>&gt;
+                        <align>center</align>
                     </control>
                 </control>
             </control>

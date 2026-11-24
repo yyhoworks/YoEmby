@@ -22,6 +22,9 @@ class _FakeListItem:
         self.label2 = label2
         self.props: dict[str, str] = {}
 
+    def getLabel(self) -> str:
+        return self.label
+
     def setProperty(self, key: str, value: str) -> None:
         self.props[key] = value
 
@@ -54,6 +57,7 @@ class _FakeControl:
 class _FakeDialog:
     textviewer_calls: list[tuple[str, str]] = []
     ok_calls: list[tuple[str, str]] = []
+    notification_calls: list[tuple[str, str]] = []
     yesno_result: bool = True
 
     def textviewer(self, heading: str, body: str) -> None:
@@ -61,6 +65,9 @@ class _FakeDialog:
 
     def ok(self, heading: str, message: str) -> None:
         self.__class__.ok_calls.append((heading, message))
+
+    def notification(self, heading: str, message: str, icon: str = "", time: int = 0, sound: bool = True) -> None:
+        self.__class__.notification_calls.append((heading, message))
 
     def yesno(self, heading: str, message: str) -> bool:
         return self.__class__.yesno_result
@@ -158,8 +165,12 @@ class TestHealthDashboardContract(unittest.TestCase):
             "$INFO[ListItem.Property(value)]",
             "$INFO[ListItem.Property(badge)]",
             "$INFO[ListItem.Property(action_label)]",
+            "Window.Property(YoEmby.Page)",
+            "ListItem.Property(tone)",
+            "ListItem.Property(meter_step)",
         ):
             self.assertIn(token, xml_text)
+        self.assertNotIn("← → 切换分页", xml_text)
 
     def test_quantize_percent_and_legacy_parser_supports_mb_and_gb(self) -> None:
         self.assertEqual(dash._quantize_percent(None), "")
@@ -271,8 +282,9 @@ class TestHealthDashboardContract(unittest.TestCase):
         )
 
     def test_dashboard_controller_navigation_properties_and_actions(self) -> None:
-        fake_xbmcgui = types.SimpleNamespace(ListItem=_FakeListItem, Dialog=_FakeDialog)
+        fake_xbmcgui = types.SimpleNamespace(ListItem=_FakeListItem, Dialog=_FakeDialog, NOTIFICATION_INFO="info")
         _FakeDialog.textviewer_calls.clear()
+        _FakeDialog.notification_calls.clear()
 
         report_v1 = {
             "storage": {"rollback_bytes": 33 * 1024 * 1024, "rollback_files": 262},
@@ -309,7 +321,16 @@ class TestHealthDashboardContract(unittest.TestCase):
             self.assertEqual(dlg.focused_id, dash.CTRL_CARD_PANEL)
             self.assertEqual(dlg.window_props["YoEmby.Page"], "0")
             self.assertEqual(dlg.controls[dash.CTRL_TITLE].label, "YoEmby 健康体检仪表盘")
+            self.assertIn("顶部标签 / 翻页键切页", dlg.controls[dash.CTRL_FOOTER_HINT].label)
+            self.assertNotIn("← → 切换分页", dlg.controls[dash.CTRL_FOOTER_HINT].label)
             self.assertEqual(len(dlg.controls[dash.CTRL_CARD_PANEL].items), 4)
+
+            # Clicking a read-only card (index 0: Thumbnails) notifies instead of failing silently
+            dlg.controls[dash.CTRL_CARD_PANEL].selected_index = 0
+            dlg.onClick(dash.CTRL_CARD_PANEL)
+            self.assertEqual(called, [])
+            self.assertEqual(len(_FakeDialog.notification_calls), 1)
+            self.assertIn("只读指标", _FakeDialog.notification_calls[0][1])
 
             # Switch tab via focus & PageDown
             dlg.onFocus(1102)

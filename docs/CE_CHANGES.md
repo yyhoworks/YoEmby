@@ -16,6 +16,15 @@
 | Batch 6 (`ec684a2`) | CoreELEC 纯观影轻装模式与无用功能裁剪 | `hooks/monitor.py`, `hooks/webservice.py`, `core/movies.py`, `core/series.py`, `database/library.py`, `helper/utils.py`, `resources/settings.xml` | `ce_opt/lite.py` | `ce_lite_mode`（专家级开关，关闭或关总开关即完整恢复上游行为） | `black.*` 15 个黑屏文件改为按扩展名首次按需懒加载（`hooks/webservice.py` 净删 76 行，省 ~4.3 MB 启动内存与 15 次闪存读取）；主题未启用时不启动 `monitor_Themes` 常驻线程且跳过每部电影/剧集的 Emby Theme/Trailer 冗余同步请求；停止自动复制 33 MB `rollback/`；设置页原生 `<visible>false</visible>` 隐藏 4 个无用分页（主题音乐/影院开场/动态库/备份）与 11 个转码/远程/分页/压缩分组；默认屏蔽 15 项杂乱或误删类右键菜单；单测 36/36 通过 |
 | Batch 5.1 (`1bd106c`) | 视觉交还皮肤主导（移除自定义黑框，中性化默认覆盖层） | `resources/skins/default/1080i/script-emby-skip*.xml`, `script-emby-context.xml`（并移除 `script-emby-ce-maintenance.xml`） | 精简 `ce_opt/maintenance.py`（移除 `maintenance_ui.py`） | 全程原生 Kodi 弹窗，皮肤自动接管全部主题与材质 | 移除自定义暗色维护弹窗与硬编码亮黄/红绿配色；`open_maintenance_menu()` 打开前自动收起底层 `DialogAddonSettings`（彻底避免双层毛玻璃透字重影），退出时自动切回设置页，使用无 `[COLOR]` 纯文本动态摘要供 `Dialog.select`/`textviewer`/`yesno`/`DialogProgressBG` 由 YoPlayer 皮肤原生渲染；跳过片头/片尾与右键菜单改为中性灰白微透兜底（皮肤侧放置同名 XML 即可自动覆盖）；单测 36/36 通过，实机 0 报错 |
 | Batch 7 | YoEmby 健康体检分页卡片仪表盘（方案 3） | 新增 `resources/skins/default/1080i/script-yoemby-health.xml`（非 YoPlayer 皮肤兜底 XML；零改动既有上游 Python 文件） | `ce_opt/yoemby_health_dashboard.py`, 升级 `ce_opt/maintenance.py` | 自动匹配 YoPlayer 皮肤同名厚磨砂覆写窗口，非 YoPlayer 皮肤无缝回退至兜底 XML | 接入 `open_health_dashboard(...)` 3 页 × 2×2 分页卡片仪表盘，直接构造结构化 `report_data` 并保留 `raw_text` 供「查看原始报告」使用；绑定 `fix_missing_streams` / `clean_rollback` / `rebuild_index` / `refresh` 回调并在维护后自动刷新卡片与原始报告；精确拆分「Emby 总缺流」与「本机可回填」指标避免未播 STRM 误报；严格遵循控件 ID（`1001`/`1002`/`1003`/`1009`/`1101`-`1103`/`2000`/`3001`/`3002`）、`YoEmby.Page` 与 `ListItem` 属性契约 |
+| Batch 8 | 方案 A 10-Foot 弹窗统一收口与体检交互精修 | `resources/skins/default/1080i/script-yoemby-health.xml`, `script-emby-connect-{server,server-manual,login,login-manual,users}.xml`, `script-emby-resume.xml`, `script-emby-context.xml`; `dialogs/{loginconnect,loginmanual,servermanual}.py`（各 +1 行输入框中性字色） | 精修 `ce_opt/yoemby_health_dashboard.py` | 全皮肤通用中性黑曜石底板 + 高对比纯白聚焦；YoPlayer 皮肤同名 XML 覆写优先级保持 100% 不变 | 修正体检仪表盘底部按键文案错位（`顶部标签 / 翻页键切页`）并补齐只读卡片轻提示；兜底 `script-yoemby-health.xml` 补齐 `YoEmby.Page` 持久当前页白条、`tone` 语义色与 `meter_step` 进度条；彻底清除 6 个旧弹窗的 Emby 亮绿（`#52b54b`/`#388e3c`）与 `easin="out"` 拼写错误，修复 `connect-server.xml` 236 行非法 `&gt;`、修复 `connect-login.xml` 1.54:1 不可见说明文字（提升至 `#9AA4B2`）、拓宽 `resume.xml` 至 480px 并全面禁用左右键误关（`noop`）；单测 47/47 通过 |
+
+---
+
+## CoreELEC 实测验收快照（2026-11-24 16:07，Batch 8 方案 A 10-Foot 弹窗收口）
+
+- **部署方式**：`scripts/deploy_to_ce.ps1`（护栏检查 + 47/47 单测通过，自动备份旧插件至 `/storage/backup/emby-dev/`，零触碰 YoPlayer 皮肤与用户 `settings.xml`）。
+- **XML 与皮肤覆写校验**：CoreELEC 上 `plugin.service.emby-next-gen/resources/skins/default/1080i/` 全部 **11/11** XML 严格解析通过；`skin.yoplayer.infuse/1080p/script-yoemby-health.xml` 保持原样未动（`29,431 B`）。
+- **日志与服务状态**：`kodi.log` 中 `EMBY` / `ce_opt` / `yoemby` / 弹窗 XML 报错与 Traceback 为 **0 条**；`127.0.0.1:57342`（5 workers）监听正常，`Server Online` 耗时 **3.9 秒**；启动后 `VmRSS` 为 **575.1 MB**（`588,928 kB`）。
 
 ---
 

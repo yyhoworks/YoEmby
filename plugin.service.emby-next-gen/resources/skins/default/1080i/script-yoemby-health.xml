@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- [CE-OPT] Plan A neutral obsidian fallback dashboard (YoPlayer skin override takes precedence) -->
 <window type="dialog">
   <defaultcontrol always="true">2000</defaultcontrol>
   <controls>
@@ -15,11 +16,18 @@
       <width>1440</width>
       <height>840</height>
       <control type="image">
+        <left>-1</left>
+        <top>-1</top>
+        <width>1442</width>
+        <height>842</height>
+        <texture colordiffuse="24FFFFFF">white.png</texture>
+      </control>
+      <control type="image">
         <left>0</left>
         <top>0</top>
         <width>1440</width>
         <height>840</height>
-        <texture colordiffuse="F2181C24">white.png</texture>
+        <texture colordiffuse="F5151922">white.png</texture>
       </control>
       <control type="label" id="1001">
         <left>44</left>
@@ -50,7 +58,7 @@
         <textcolor>FFF5F5F7</textcolor>
         <focusedcolor>FF12161F</focusedcolor>
         <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
-        <texturenofocus colordiffuse="33FFFFFF">white.png</texturenofocus>
+        <texturenofocus colordiffuse="1EFFFFFF">white.png</texturenofocus>
         <ondown>9000</ondown>
       </control>
       <control type="grouplist" id="9000">
@@ -72,7 +80,7 @@
           <textcolor>FFD0D6E0</textcolor>
           <focusedcolor>FF12161F</focusedcolor>
           <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
-          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <texturenofocus colordiffuse="18FFFFFF">white.png</texturenofocus>
           <onleft>1103</onleft>
           <onright>1102</onright>
           <onup>1009</onup>
@@ -88,7 +96,7 @@
           <textcolor>FFD0D6E0</textcolor>
           <focusedcolor>FF12161F</focusedcolor>
           <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
-          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <texturenofocus colordiffuse="18FFFFFF">white.png</texturenofocus>
           <onleft>1101</onleft>
           <onright>1103</onright>
           <onup>1009</onup>
@@ -104,12 +112,28 @@
           <textcolor>FFD0D6E0</textcolor>
           <focusedcolor>FF12161F</focusedcolor>
           <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
-          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <texturenofocus colordiffuse="18FFFFFF">white.png</texturenofocus>
           <onleft>1102</onleft>
           <onright>1101</onright>
           <onup>1009</onup>
           <ondown>2000</ondown>
         </control>
+      </control>
+      <!-- Persistent active-page indicator when focus moves to 2000 card panel -->
+      <control type="image">
+        <left>44</left><top>185</top><width>444</width><height>3</height>
+        <texture colordiffuse="FFF5F5F7">white.png</texture>
+        <visible>String.IsEqual(Window.Property(YoEmby.Page),0)</visible>
+      </control>
+      <control type="image">
+        <left>498</left><top>185</top><width>444</width><height>3</height>
+        <texture colordiffuse="FFF5F5F7">white.png</texture>
+        <visible>String.IsEqual(Window.Property(YoEmby.Page),1)</visible>
+      </control>
+      <control type="image">
+        <left>952</left><top>185</top><width>444</width><height>3</height>
+        <texture colordiffuse="FFF5F5F7">white.png</texture>
+        <visible>String.IsEqual(Window.Property(YoEmby.Page),2)</visible>
       </control>
       <control type="panel" id="2000">
         <left>44</left>
@@ -124,56 +148,69 @@
             <width>658</width>
             <height>244</height>
             <control type="image">
-              <width>658</width>
-              <height>244</height>
-              <texture colordiffuse="22FFFFFF">white.png</texture>
+              <width>658</width><height>244</height>
+              <texture colordiffuse="16FFFFFF">white.png</texture>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>20</top>
-              <width>440</width>
-              <height>34</height>
-              <font>font12</font>
-              <textcolor>FFB8C0CC</textcolor>
+              <left>24</left><top>20</top><width>420</width><height>34</height>
+              <font>font12</font><textcolor>FFB8C0CC</textcolor>
               <label>$INFO[ListItem.Label]</label>
             </control>
             <control type="label">
-              <left>470</left>
-              <top>20</top>
-              <width>164</width>
-              <height>34</height>
-              <font>font12</font>
-              <align>right</align>
-              <textcolor>FF60A5FA</textcolor>
+              <left>450</left><top>20</top><width>184</width><height>34</height>
+              <font>font12</font><align>right</align><textcolor>FF6EE7B7</textcolor>
               <label>$INFO[ListItem.Property(badge)]</label>
+              <visible>String.IsEqual(ListItem.Property(tone),ok)</visible>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>70</top>
-              <width>610</width>
-              <height>56</height>
-              <font>font30</font>
-              <textcolor>FFF5F5F7</textcolor>
+              <left>450</left><top>20</top><width>184</width><height>34</height>
+              <font>font12</font><align>right</align><textcolor>FFFCD34D</textcolor>
+              <label>$INFO[ListItem.Property(badge)]</label>
+              <visible>String.IsEqual(ListItem.Property(tone),warn)</visible>
+            </control>
+            <control type="label">
+              <left>450</left><top>20</top><width>184</width><height>34</height>
+              <font>font12</font><align>right</align><textcolor>FF93C5FD</textcolor>
+              <label>$INFO[ListItem.Property(badge)]</label>
+              <visible>!String.IsEqual(ListItem.Property(tone),ok) + !String.IsEqual(ListItem.Property(tone),warn)</visible>
+            </control>
+            <control type="label">
+              <left>24</left><top>68</top><width>610</width><height>56</height>
+              <font>font30</font><textcolor>FFF5F5F7</textcolor>
               <label>$INFO[ListItem.Property(value)]</label>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>148</top>
-              <width>610</width>
-              <height>34</height>
-              <font>font12</font>
-              <textcolor>FFB8C0CC</textcolor>
+              <left>24</left><top>140</top><width>610</width><height>34</height>
+              <font>font12</font><textcolor>FFB8C0CC</textcolor>
               <label>$INFO[ListItem.Label2]</label>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>192</top>
-              <width>610</width>
-              <height>34</height>
-              <font>font12</font>
-              <textcolor>FFF5F5F7</textcolor>
+              <left>24</left><top>180</top><width>610</width><height>34</height>
+              <font>font12</font><textcolor>FFF5F5F7</textcolor>
               <label>$INFO[ListItem.Property(action_label)]</label>
+              <visible>!String.IsEmpty(ListItem.Property(action_label))</visible>
             </control>
+            <control type="label">
+              <left>24</left><top>180</top><width>610</width><height>34</height>
+              <font>font12</font><textcolor>FF7C8799</textcolor>
+              <label>只读指标</label>
+              <visible>String.IsEmpty(ListItem.Property(action_label))</visible>
+            </control>
+            <control type="image">
+              <left>24</left><top>224</top><width>610</width><height>4</height>
+              <texture colordiffuse="1EFFFFFF">white.png</texture>
+              <visible>!String.IsEmpty(ListItem.Property(meter_step))</visible>
+            </control>
+            <control type="image"><left>24</left><top>224</top><width>61</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),10)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>122</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),20)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>183</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),30)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>244</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),40)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>305</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),50)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>366</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),60)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>427</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),70)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>488</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),80)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>549</width><height>4</height><texture colordiffuse="CC93C5FD">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),90)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>610</width><height>4</height><texture colordiffuse="CC6EE7B7">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),100)</visible></control>
           </control>
         </itemlayout>
         <focusedlayout width="676" height="262">
@@ -181,67 +218,80 @@
             <width>658</width>
             <height>244</height>
             <control type="image">
-              <width>658</width>
-              <height>244</height>
+              <width>658</width><height>244</height>
               <texture colordiffuse="FFF1F3F5">white.png</texture>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>20</top>
-              <width>440</width>
-              <height>34</height>
-              <font>font12</font>
-              <textcolor>FF495564</textcolor>
+              <left>24</left><top>20</top><width>420</width><height>34</height>
+              <font>font12</font><textcolor>FF495564</textcolor>
               <label>$INFO[ListItem.Label]</label>
             </control>
             <control type="label">
-              <left>470</left>
-              <top>20</top>
-              <width>164</width>
-              <height>34</height>
-              <font>font12</font>
-              <align>right</align>
-              <textcolor>FF18212B</textcolor>
+              <left>450</left><top>20</top><width>184</width><height>34</height>
+              <font>font12</font><align>right</align><textcolor>FF065F46</textcolor>
               <label>$INFO[ListItem.Property(badge)]</label>
+              <visible>String.IsEqual(ListItem.Property(tone),ok)</visible>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>70</top>
-              <width>610</width>
-              <height>56</height>
-              <font>font30</font>
-              <textcolor>FF18212B</textcolor>
+              <left>450</left><top>20</top><width>184</width><height>34</height>
+              <font>font12</font><align>right</align><textcolor>FF92400E</textcolor>
+              <label>$INFO[ListItem.Property(badge)]</label>
+              <visible>String.IsEqual(ListItem.Property(tone),warn)</visible>
+            </control>
+            <control type="label">
+              <left>450</left><top>20</top><width>184</width><height>34</height>
+              <font>font12</font><align>right</align><textcolor>FF1E40AF</textcolor>
+              <label>$INFO[ListItem.Property(badge)]</label>
+              <visible>!String.IsEqual(ListItem.Property(tone),ok) + !String.IsEqual(ListItem.Property(tone),warn)</visible>
+            </control>
+            <control type="label">
+              <left>24</left><top>68</top><width>610</width><height>56</height>
+              <font>font30</font><textcolor>FF121821</textcolor>
               <label>$INFO[ListItem.Property(value)]</label>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>148</top>
-              <width>610</width>
-              <height>34</height>
-              <font>font12</font>
-              <textcolor>FF495564</textcolor>
+              <left>24</left><top>140</top><width>610</width><height>34</height>
+              <font>font12</font><textcolor>FF495564</textcolor>
               <label>$INFO[ListItem.Label2]</label>
             </control>
             <control type="label">
-              <left>24</left>
-              <top>192</top>
-              <width>610</width>
-              <height>34</height>
-              <font>font12</font>
-              <textcolor>FF18212B</textcolor>
+              <left>24</left><top>180</top><width>610</width><height>34</height>
+              <font>font12</font><textcolor>FF121821</textcolor>
               <label>$INFO[ListItem.Property(action_label)]</label>
+              <visible>!String.IsEmpty(ListItem.Property(action_label))</visible>
             </control>
+            <control type="label">
+              <left>24</left><top>180</top><width>610</width><height>34</height>
+              <font>font12</font><textcolor>FF64748B</textcolor>
+              <label>只读指标</label>
+              <visible>String.IsEmpty(ListItem.Property(action_label))</visible>
+            </control>
+            <control type="image">
+              <left>24</left><top>224</top><width>610</width><height>4</height>
+              <texture colordiffuse="24121821">white.png</texture>
+              <visible>!String.IsEmpty(ListItem.Property(meter_step))</visible>
+            </control>
+            <control type="image"><left>24</left><top>224</top><width>61</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),10)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>122</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),20)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>183</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),30)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>244</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),40)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>305</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),50)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>366</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),60)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>427</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),70)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>488</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),80)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>549</width><height>4</height><texture colordiffuse="CC2563EB">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),90)</visible></control>
+            <control type="image"><left>24</left><top>224</top><width>610</width><height>4</height><texture colordiffuse="CC059669">white.png</texture><visible>String.IsEqual(ListItem.Property(meter_step),100)</visible></control>
           </control>
         </focusedlayout>
       </control>
       <control type="label" id="1003">
         <left>44</left>
         <top>764</top>
-        <width>840</width>
+        <width>860</width>
         <height>52</height>
         <font>font12</font>
         <textcolor>FFB0B8C4</textcolor>
-        <label>← → 切换分页 · 确定执行对应维护 · 返回退出</label>
+        <label>顶部标签 / 翻页键切页 · 确定执行维护 · 返回退出</label>
       </control>
       <control type="grouplist" id="3000">
         <left>920</left>
@@ -263,7 +313,7 @@
           <textcolor>FFF5F5F7</textcolor>
           <focusedcolor>FF12161F</focusedcolor>
           <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
-          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <texturenofocus colordiffuse="1EFFFFFF">white.png</texturenofocus>
           <onleft>3002</onleft>
           <onright>3002</onright>
           <onup>2000</onup>
@@ -279,7 +329,7 @@
           <textcolor>FFF5F5F7</textcolor>
           <focusedcolor>FF12161F</focusedcolor>
           <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
-          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <texturenofocus colordiffuse="1EFFFFFF">white.png</texturenofocus>
           <onleft>3001</onleft>
           <onright>3001</onright>
           <onup>2000</onup>
