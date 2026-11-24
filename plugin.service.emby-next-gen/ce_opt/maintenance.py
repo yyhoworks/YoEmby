@@ -246,7 +246,7 @@ def build_menu_entries(report: dict[str, Any]) -> list[str]:
     rb_tag = f"{_fmt_mb(rb_b)} · {rb_cnt} 文件" if rb_cnt > 0 else "已清空"
 
     return [
-        f"查看完整健康体检报告（{summary_tag} · 总存储 {_fmt_mb(total_b)}）",
+        f"查看健康体检报告（{summary_tag} · {_fmt_mb(total_b)}）",
         f"批量补齐已播 STRM 缺流信息（{heal_tag}）",
         f"清理旧插件备份 rollback/（{rb_tag}）",
         f"核对 / 补建 Emby 增量覆盖索引（{idx_cur} / {idx_exp}）",
