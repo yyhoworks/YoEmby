@@ -44,6 +44,8 @@ DEFAULTS: dict[str, Any] = {
     "ce_artwork_quality": 85,
     "ce_artwork_webp": True,
     "ce_skip_chapter_bookmarks": False,
+    # Batch 6: CoreELEC pure-cinema lite mode (prune unused themes/cinema/rollback/menus)
+    "ce_lite_mode": True,
 }
 
 _STATE: dict[str, Any] = dict(DEFAULTS)
@@ -83,6 +85,7 @@ def reload(addon=None) -> dict[str, Any]:
             addon = None
 
     next_state = dict(DEFAULTS)
+    explicit_keys: set[str] = set()
     if addon is not None:
         for key, default in DEFAULTS.items():
             try:
@@ -91,6 +94,19 @@ def reload(addon=None) -> dict[str, Any]:
                 raw = ""
             if raw not in (None, ""):
                 next_state[key] = _coerce(default, raw)
+                explicit_keys.add(key)
+
+        # Distilled Expert toggles in settings.xml govern bundled internal flags when unset
+        _bundles = (
+            ("ce_sync_debounce", ("ce_sync_fingerprint", "ce_widget_debounce", "ce_pause_sync_during_playback")),
+            ("ce_db_indexes", ("ce_db_pragmas",)),
+            ("ce_artwork_307_opt", ("ce_strm_path_fix", "ce_artwork_webp")),
+        )
+        for parent, children in _bundles:
+            if parent in explicit_keys:
+                for child in children:
+                    if child not in explicit_keys:
+                        next_state[child] = bool(next_state[parent])
 
     # Keep numeric parameters in safe bounds
     next_state["ce_sync_debounce_sec"] = max(0.5, min(60.0, float(next_state["ce_sync_debounce_sec"])))

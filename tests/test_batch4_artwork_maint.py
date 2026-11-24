@@ -139,7 +139,7 @@ class TestMaintenanceAndSettingsXml(unittest.TestCase):
         cats = [c.attrib.get("id") for c in root.iter("category")]
         self.assertIn("ce_opt", cats)
         setting_ids = {s.attrib.get("id") for s in root.iter("setting")}
-        for expected in ("ce_enabled", "ce_sync_debounce", "ce_sync_fingerprint", "ce_avdvplus_badges", "ce_strm_heal", "ce_maintenance_menu"):
+        for expected in ("ce_enabled", "ce_sync_debounce", "ce_avdvplus_badges", "ce_strm_heal", "ce_maintenance_menu"):
             self.assertIn(expected, setting_ids)
 
 

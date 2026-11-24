@@ -3608,69 +3608,77 @@ msgid "YoEmby CE"
 msgstr ""
 
 msgctxt "#33901"
-msgid "Sync & Database"
+msgid "Core Optimization & Maintenance"
 msgstr ""
 
 msgctxt "#33902"
-msgid "Enable CoreELEC optimizations (master switch)"
+msgid "Enable CoreELEC acceleration"
 msgstr ""
 
 msgctxt "#33903"
-msgid "Coalesce WebSocket LibraryChanged bursts"
+msgid "Health check & maintenance"
 msgstr ""
 
 msgctxt "#33904"
-msgid "Skip unchanged items by metadata fingerprint"
+msgid "Default multiversion source"
 msgstr ""
 
 msgctxt "#33905"
-msgid "Debounce widget refresh scans"
+msgid "Prune 5-min chapter bookmarks"
 msgstr ""
 
 msgctxt "#33906"
-msgid "Pause background sync during playback"
+msgid "Prefer local storage"
 msgstr ""
 
 msgctxt "#33907"
-msgid "Add CoreELEC SQLite indexes (schema-safe)"
+msgid "Prefer highest resolution"
 msgstr ""
 
 msgctxt "#33908"
-msgid "Apply CoreELEC SQLite cache PRAGMAs"
+msgid "Plugin default"
 msgstr ""
 
 msgctxt "#33909"
-msgid "STRM, avdvplus & Maintenance"
+msgid "Master switch for CoreELEC sync, badges, STRM & lite mode."
 msgstr ""
 
 msgctxt "#33910"
-msgid "Sync avdvplus DV Profile / HDR10+ / Atmos badges"
+msgid "Inspect DB health, heal missing STRM streams & clean old backups."
 msgstr ""
 
 msgctxt "#33911"
-msgid "Auto-heal missing STRM streams after playback"
+msgid "Auto-pick local SMB over cloud STRM when multiple versions exist."
 msgstr ""
 
 msgctxt "#33912"
-msgid "Fix HTTP/STRM redirect & timeout parameters"
+msgid "Skip auto 5-min chapter markers while keeping Skip Intro/Credits."
 msgstr ""
 
 msgctxt "#33913"
-msgid "STRM HTTP connection timeout (seconds)"
+msgid "STRM HTTP connect timeout (s)"
 msgstr ""
 
 msgctxt "#33914"
-msgid "Multiversion priority policy"
+msgid "Pure-cinema lite mode (prune themes/cinema/rollback)"
 msgstr ""
 
 msgctxt "#33915"
-msgid "Optimize artwork 307 redirects (tag + size cap)"
+msgid "avdvplus DV Profile & Atmos badges"
 msgstr ""
 
 msgctxt "#33916"
-msgid "Skip 5-minute chapter bookmarks (keep Intro/Credits)"
+msgid "Auto-heal STRM streams after play"
 msgstr ""
 
 msgctxt "#33917"
-msgid "Open YoEmby healthcheck & maintenance tools"
+msgid "Sync debounce & fingerprint dedup"
+msgstr ""
+
+msgctxt "#33918"
+msgid "SQLite indexes & cache tuning"
+msgstr ""
+
+msgctxt "#33919"
+msgid "Artwork 307 cap & STRM path fix"
 msgstr ""

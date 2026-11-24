@@ -43,6 +43,8 @@ def _file_size(path: str | Path) -> int:
 
 
 def _fmt_mb(num_bytes: int) -> str:
+    if num_bytes >= 1024 * 1024 * 1024:
+        return f"{num_bytes / (1024 * 1024 * 1024):.2f} GB"
     return f"{num_bytes / (1024 * 1024):.1f} MB"
 
 
@@ -218,59 +220,7 @@ def safe_clear_rollback(rollback_dir: str | Path) -> tuple[bool, int]:
 
 
 def open_maintenance_menu(utils_mod: Any, dbio_mod: Any) -> None:
-    """Interactive Kodi menu triggered via `NotifyAll(plugin.service.emby-next-gen,ce_maintenance_menu)`."""
-    import xbmcgui  # type: ignore
-    import xbmcvfs  # type: ignore
+    """Open unified opaque YoEmby Health & Maintenance panel."""
+    from . import maintenance_ui
 
-    server_id = utils_mod.EmbyServerIds[0] if utils_mod.EmbyServerIds else ""
-    emby_db = utils_mod.DatabaseFiles.get(server_id, "") if server_id else ""
-    video_db = utils_mod.DatabaseFiles.get("video", "")
-    tex_db = utils_mod.DatabaseFiles.get("texture", "")
-    temp_dir = xbmcvfs.translatePath(utils_mod.FolderEmbyTemp)
-    rollback_dir = xbmcvfs.translatePath("special://profile/addon_data/plugin.service.emby-next-gen/rollback/")
-    thumbs_dir = xbmcvfs.translatePath(utils_mod.FolderUserdataThumbnails)
-
-    options = [
-        "1. 查看 YoEmby 健康体检报告（只读）",
-        "2. 立即核对并补建 SQLite 增量索引",
-        "3. 从 Kodi 已有流信息批量回填缺流 STRM",
-        "4. 清理旧版本 rollback 备份目录（需二次确认）",
-    ]
-    choice = xbmcgui.Dialog().select("YoEmby CoreELEC 运维工具", options)
-    if choice == 0:
-        rep = collect_health_report(emby_db, video_db, tex_db, temp_dir, rollback_dir, thumbs_dir)
-        xbmcgui.Dialog().textviewer("YoEmby 健康体检报告", format_health_report(rep))
-    elif choice == 1 and server_id:
-        sqls: dict[str, Any] = {}
-        try:
-            dbio_mod.DBOpenRW(server_id, "ce_index_check", sqls)
-            created = db_opt.ensure_emby_indexes(sqls["emby"].cursor, True)
-            xbmcgui.Dialog().notification("YoEmby", f"索引检查完成，本次新增 {created} 个索引", time=4000)
-        finally:
-            if sqls.get("emby") is not None:
-                dbio_mod.DBCloseRW(server_id, "ce_index_check", sqls)
-    elif choice == 2 and server_id:
-        sqls = {}
-        vid_ro = None
-        try:
-            vid_ro = dbio_mod.DBOpenRO("video", "ce_batch_heal")
-            dbio_mod.DBOpenRW(server_id, "ce_batch_heal", sqls)
-            healed = batch_heal_from_kodi_db(sqls["emby"].cursor, vid_ro.cursor)
-            xbmcgui.Dialog().notification("YoEmby", f"批量回填完成：补齐 {healed} 条缺流条目", time=4000)
-        finally:
-            if vid_ro is not None:
-                dbio_mod.DBCloseRO("video", "ce_batch_heal")
-            if sqls.get("emby") is not None:
-                dbio_mod.DBCloseRW(server_id, "ce_batch_heal", sqls)
-    elif choice == 3:
-        rb_sz, rb_cnt = _dir_size_and_count(rollback_dir)
-        if rb_cnt == 0:
-            xbmcgui.Dialog().notification("YoEmby", "rollback 目录已为空，无需清理", time=3000)
-            return
-        ok = xbmcgui.Dialog().yesno(
-            "YoEmby 清理确认",
-            f"确定删除 rollback/ 下 {rb_cnt} 个旧插件备份文件（共 {_fmt_mb(rb_sz)}）吗？\n不会影响当前插件或媒体库。",
-        )
-        if ok:
-            _, freed = safe_clear_rollback(rollback_dir)
-            xbmcgui.Dialog().notification("YoEmby", f"已清理 rollback/，释放 {_fmt_mb(freed)}", time=4000)
+    maintenance_ui.open_panel(utils_mod, dbio_mod)

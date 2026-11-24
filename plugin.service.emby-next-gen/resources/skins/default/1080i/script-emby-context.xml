@@ -46,17 +46,15 @@
                 <control type="image">
                     <width>100%</width>
                     <height>480</height>
-                    <texture colordiffuse="ff222326" border="10">dialogs/dialog_back.png</texture>
+                    <texture colordiffuse="FF141923" border="10">dialogs/dialog_back.png</texture>
                 </control>
                 <control type="list" id="155">
                     <centerleft>50%</centerleft>
                     <top>10</top>
                     <width>490</width>
                     <height>460</height>
-                    <onup>noop</onup>
-                    <onleft>close</onleft>
-                    <onright>close</onright>
-                    <ondown>noop</ondown>
+                    <onleft>noop</onleft>
+                    <onright>noop</onright>
                     <itemlayout width="490" height="65">
                         <control type="label">
                             <width>100%</width>
@@ -64,7 +62,7 @@
                             <aligny>center</aligny>
                             <textoffsetx>20</textoffsetx>
                             <font>font13</font>
-                            <textcolor>ffe1e1e1</textcolor>
+                            <textcolor>FFE2E8F0</textcolor>
                             <shadowcolor>66000000</shadowcolor>
                             <label>$INFO[ListItem.Label]</label>
                         </control>
@@ -73,13 +71,13 @@
                         <control type="image">
                             <width>100%</width>
                             <height>65</height>
-                            <texture colordiffuse="ff222326">white.png</texture>
+                            <texture colordiffuse="FF141923">white.png</texture>
                             <visible>!Control.HasFocus(155)</visible>
                         </control>
                         <control type="image">
                             <width>100%</width>
                             <height>65</height>
-                            <texture colordiffuse="ff303034">white.png</texture>
+                            <texture colordiffuse="FFF59E0B">white.png</texture>
                             <visible>Control.HasFocus(155)</visible>
                         </control>
                         <control type="label">
@@ -89,8 +87,7 @@
                             <textoffsetx>20</textoffsetx>
                             <font>font13</font>
                             <scroll>true</scroll>
-                            <textcolor>ffe1e1e1</textcolor>
-                            <shadowcolor>66000000</shadowcolor>
+                            <textcolor>FF0B0E14</textcolor>
                             <label>$INFO[ListItem.Label]</label>
                         </control>
                     </focusedlayout>

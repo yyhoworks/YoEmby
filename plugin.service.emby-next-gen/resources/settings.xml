@@ -2495,23 +2495,17 @@
         </category>
         <category id="ce_opt" label="33900" help="">
             <group id="1" label="33901">
-                <setting id="ce_enabled" type="boolean" label="33902" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_sync_debounce" type="boolean" label="33903" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_sync_fingerprint" type="boolean" label="33904" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_widget_debounce" type="boolean" label="33905" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_pause_sync_during_playback" type="boolean" label="33906" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_db_indexes" type="boolean" label="33907" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_db_pragmas" type="boolean" label="33908" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-            </group>
-            <group id="2" label="33909">
-                <setting id="ce_avdvplus_badges" type="boolean" label="33910" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_strm_heal" type="boolean" label="33911" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_strm_path_fix" type="boolean" label="33912" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_strm_timeout" type="integer" label="33913" help=""><level>0</level><default>15</default><constraints><minimum>5</minimum><step>1</step><maximum>60</maximum></constraints><control type="slider" format="integer"><popup>false</popup></control></setting>
-                <setting id="ce_multiversion_policy" type="string" label="33914" help=""><level>0</level><default>prefer_local</default><constraints><options><option>prefer_local</option><option>prefer_resolution</option><option>upstream</option></options></constraints><control type="list" format="string"/></setting>
-                <setting id="ce_artwork_307_opt" type="boolean" label="33915" help=""><level>0</level><default>true</default><control type="toggle"/></setting>
-                <setting id="ce_skip_chapter_bookmarks" type="boolean" label="33916" help=""><level>0</level><default>false</default><control type="toggle"/></setting>
-                <setting id="ce_maintenance_menu" type="action" label="33917" help=""><data>NotifyAll(plugin.service.emby-next-gen,ce_maintenance_menu)</data><level>0</level><control type="button" format="action"/></setting>
+                <setting id="ce_maintenance_menu" type="action" label="33903" help="33910"><data>NotifyAll(plugin.service.emby-next-gen,ce_maintenance_menu)</data><level>0</level><control type="button" format="action"/></setting>
+                <setting id="ce_enabled" type="boolean" label="33902" help="33909"><level>0</level><default>true</default><control type="toggle"/></setting>
+                <setting id="ce_multiversion_policy" type="string" label="33904" help="33911"><level>0</level><default>prefer_local</default><constraints><options><option label="33906">prefer_local</option><option label="33907">prefer_resolution</option><option label="33908">upstream</option></options></constraints><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="spinner" format="string"/></setting>
+                <setting id="ce_skip_chapter_bookmarks" type="boolean" label="33905" help="33912"><level>0</level><default>false</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_strm_timeout" type="integer" label="33913" help=""><level>2</level><default>15</default><constraints><minimum>5</minimum><step>1</step><maximum>60</maximum></constraints><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="slider" format="integer"><popup>false</popup></control></setting>
+                <setting id="ce_lite_mode" type="boolean" label="33914" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_avdvplus_badges" type="boolean" label="33915" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_strm_heal" type="boolean" label="33916" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_sync_debounce" type="boolean" label="33917" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_db_indexes" type="boolean" label="33918" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_artwork_307_opt" type="boolean" label="33919" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
             </group>
         </category>
     </section>
