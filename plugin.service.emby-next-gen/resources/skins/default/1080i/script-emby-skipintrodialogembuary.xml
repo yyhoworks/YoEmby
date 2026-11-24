@@ -21,8 +21,8 @@
             <width>280</width>
             <height>68</height>
             <control type="image">
-                <left>-2</left><top>-2</top><width>284</width><height>72</height>
-                <texture colordiffuse="40FFFFFF">white.png</texture>
+                <left>-1</left><top>-1</top><width>282</width><height>70</height>
+                <texture colordiffuse="2EFFFFFF">white.png</texture>
             </control>
             <control type="button" id="1">
                 <left>0</left><top>0</top><width>280</width><height>68</height>
@@ -31,10 +31,10 @@
                 <label>$ADDON[plugin.service.emby-next-gen 33417]</label>
                 <align>center</align>
                 <aligny>center</aligny>
-                <textcolor>FFF8FAFC</textcolor>
-                <focusedcolor>FF0B0E14</focusedcolor>
-                <texturenofocus colordiffuse="E610141C">white.png</texturenofocus>
-                <texturefocus colordiffuse="FFF59E0B">white.png</texturefocus>
+                <textcolor>FFF5F5F7</textcolor>
+                <focusedcolor>FFFFFFFF</focusedcolor>
+                <texturenofocus colordiffuse="CC1B1E26">white.png</texturenofocus>
+                <texturefocus colordiffuse="46FFFFFF">white.png</texturefocus>
             </control>
         </control>
     </controls>

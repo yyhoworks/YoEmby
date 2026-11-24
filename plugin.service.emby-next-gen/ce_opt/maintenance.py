@@ -162,9 +162,12 @@ def format_health_report(report: dict[str, Any]) -> str:
     rt = report.get("runtime_stats", {})
     cfg = report.get("config", {})
 
+    policy_map = {"prefer_local": "优先本地存储", "prefer_resolution": "优先最高分辨率", "upstream": "插件默认"}
+    policy_zh = policy_map.get(str(cfg.get("ce_multiversion_policy", "prefer_local")), "优先本地存储")
+
     lines = [
         "=== YoEmby CoreELEC 健康体检报告 ===",
-        f"总开关 ce_enabled: {'开启' if cfg.get('ce_enabled') else '关闭'} | 多版本策略: {cfg.get('ce_multiversion_policy')}",
+        f"总开关 ce_enabled: {'开启' if cfg.get('ce_enabled') else '关闭'} | 多版本策略: {policy_zh}",
         "",
         "[1] 存储占用",
         f"  MyVideos DB : {_fmt_mb(st.get('video_db_bytes', 0))}",
@@ -219,8 +222,112 @@ def safe_clear_rollback(rollback_dir: str | Path) -> tuple[bool, int]:
     return True, bytes_before
 
 
-def open_maintenance_menu(utils_mod: Any, dbio_mod: Any) -> None:
-    """Open unified opaque YoEmby Health & Maintenance panel."""
-    from . import maintenance_ui
+def build_menu_entries(report: dict[str, Any]) -> list[str]:
+    """Build theme-neutral plain-text menu entries for native Kodi Dialog.select."""
+    st = report.get("storage", {})
+    edb = report.get("emby_db", {})
+    total_b = (
+        int(st.get("video_db_bytes", 0))
+        + int(st.get("emby_db_bytes", 0))
+        + int(st.get("textures_db_bytes", 0))
+        + int(st.get("thumbnails_bytes", 0))
+        + int(st.get("temp_bytes", 0))
+        + int(st.get("rollback_bytes", 0))
+    )
+    missing = int(edb.get("items_missing_videostreams", 0))
+    rb_b = int(st.get("rollback_bytes", 0))
+    rb_cnt = int(st.get("rollback_files", 0))
+    idx_cur = int(edb.get("ce_indexes_present", 0))
+    idx_exp = int(edb.get("ce_indexes_expected", 0))
 
-    maintenance_ui.open_panel(utils_mod, dbio_mod)
+    issues = (1 if missing > 0 else 0) + (1 if rb_b > 0 else 0) + (1 if idx_exp > 0 and idx_cur < idx_exp else 0)
+    summary_tag = f"{issues} 项可优化" if issues else "全部健康"
+    heal_tag = f"当前 {missing} 条缺流" if missing > 0 else "流信息完整"
+    rb_tag = f"{_fmt_mb(rb_b)} · {rb_cnt} 文件" if rb_cnt > 0 else "已清空"
+
+    return [
+        f"查看完整健康体检报告（{summary_tag} · 总存储 {_fmt_mb(total_b)}）",
+        f"批量补齐已播 STRM 缺流信息（{heal_tag}）",
+        f"清理旧插件备份 rollback/（{rb_tag}）",
+        f"核对 / 补建 Emby 增量覆盖索引（{idx_cur} / {idx_exp}）",
+    ]
+
+
+def open_maintenance_menu(utils_mod: Any, dbio_mod: Any) -> None:
+    """Open skin-driven native Kodi dialogs (closing addonsettings first to prevent double-glass overlap)."""
+    import xbmc  # type: ignore
+    import xbmcgui  # type: ignore
+    import xbmcvfs  # type: ignore
+
+    server_id = utils_mod.EmbyServerIds[0] if utils_mod.EmbyServerIds else ""
+    emby_db = utils_mod.DatabaseFiles.get(server_id, "") if server_id else ""
+    video_db = utils_mod.DatabaseFiles.get("video", "")
+    tex_db = utils_mod.DatabaseFiles.get("texture", "")
+    temp_dir = xbmcvfs.translatePath(utils_mod.FolderEmbyTemp)
+    rollback_dir = xbmcvfs.translatePath("special://profile/addon_data/plugin.service.emby-next-gen/rollback/")
+    thumbs_dir = xbmcvfs.translatePath(utils_mod.FolderUserdataThumbnails)
+
+    reopen_settings = bool(xbmc.getCondVisibility("Window.IsActive(addonsettings)"))
+    if reopen_settings:
+        xbmc.executebuiltin("Dialog.Close(addonsettings)")
+        xbmc.sleep(150)
+
+    dlg = xbmcgui.Dialog()
+    try:
+        while not utils_mod.SystemShutdown:
+            report = collect_health_report(emby_db, video_db, tex_db, temp_dir, rollback_dir, thumbs_dir)
+            choice = dlg.select("YoEmby 健康体检与维护", build_menu_entries(report))
+            if choice < 0:
+                break
+
+            if choice == 0:
+                dlg.textviewer("YoEmby 健康体检报告", format_health_report(report))
+            elif choice == 1:
+                if not server_id:
+                    dlg.ok("YoEmby 维护", "未连接 Emby 服务器，请先在「连接」页登录后重试。")
+                    continue
+                prog = xbmcgui.DialogProgressBG()
+                prog.create("YoEmby", "正在批量回填已播 STRM 缺流信息…")
+                sqls: dict[str, Any] = {}
+                vid_ro = None
+                try:
+                    prog.update(30)
+                    vid_ro = dbio_mod.DBOpenRO("video", "ce_batch_heal")
+                    dbio_mod.DBOpenRW(server_id, "ce_batch_heal", sqls)
+                    prog.update(70)
+                    healed = batch_heal_from_kodi_db(sqls["emby"].cursor, vid_ro.cursor)
+                    prog.update(100)
+                finally:
+                    prog.close()
+                    if vid_ro is not None:
+                        dbio_mod.DBCloseRO("video", "ce_batch_heal")
+                    if sqls.get("emby") is not None:
+                        dbio_mod.DBCloseRW(server_id, "ce_batch_heal", sqls)
+                dlg.ok("YoEmby 维护完成", f"本次共从 Kodi 数据库补齐 {healed} 条已播 STRM 流信息。")
+            elif choice == 2:
+                rb_sz = int(report.get("storage", {}).get("rollback_bytes", 0))
+                rb_cnt = int(report.get("storage", {}).get("rollback_files", 0))
+                if rb_cnt == 0:
+                    dlg.ok("YoEmby 维护", "rollback/ 目录当前已为空，无需清理。")
+                    continue
+                if dlg.yesno(
+                    "YoEmby 清理确认",
+                    f"确定删除 rollback/ 目录下 {rb_cnt} 个旧插件备份文件（共 {_fmt_mb(rb_sz)}）吗？\n不会影响当前插件、配置或媒体库。",
+                ):
+                    _, freed = safe_clear_rollback(rollback_dir)
+                    dlg.ok("YoEmby 清理完成", f"已清理 rollback/，释放 {_fmt_mb(freed)}。")
+            elif choice == 3:
+                if not server_id:
+                    dlg.ok("YoEmby 维护", "未连接 Emby 服务器，请先在「连接」页登录后重试。")
+                    continue
+                sqls = {}
+                try:
+                    dbio_mod.DBOpenRW(server_id, "ce_index_check", sqls)
+                    created = db_opt.ensure_emby_indexes(sqls["emby"].cursor, True)
+                finally:
+                    if sqls.get("emby") is not None:
+                        dbio_mod.DBCloseRW(server_id, "ce_index_check", sqls)
+                dlg.ok("YoEmby 索引核对", f"增量覆盖索引核对完成，本次新增 {created} 个索引。")
+    finally:
+        if reopen_settings and not utils_mod.SystemShutdown:
+            xbmc.executebuiltin("Addon.OpenSettings(plugin.service.emby-next-gen)")

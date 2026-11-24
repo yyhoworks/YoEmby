@@ -46,7 +46,7 @@
                 <control type="image">
                     <width>100%</width>
                     <height>480</height>
-                    <texture colordiffuse="FF141923" border="10">dialogs/dialog_back.png</texture>
+                    <texture colordiffuse="E61B1E26" border="10">dialogs/dialog_back.png</texture>
                 </control>
                 <control type="list" id="155">
                     <centerleft>50%</centerleft>
@@ -71,13 +71,13 @@
                         <control type="image">
                             <width>100%</width>
                             <height>65</height>
-                            <texture colordiffuse="FF141923">white.png</texture>
+                            <texture colordiffuse="00FFFFFF">white.png</texture>
                             <visible>!Control.HasFocus(155)</visible>
                         </control>
                         <control type="image">
                             <width>100%</width>
                             <height>65</height>
-                            <texture colordiffuse="FFF59E0B">white.png</texture>
+                            <texture colordiffuse="38FFFFFF">white.png</texture>
                             <visible>Control.HasFocus(155)</visible>
                         </control>
                         <control type="label">
@@ -87,7 +87,7 @@
                             <textoffsetx>20</textoffsetx>
                             <font>font13</font>
                             <scroll>true</scroll>
-                            <textcolor>FF0B0E14</textcolor>
+                            <textcolor>FFFFFFFF</textcolor>
                             <label>$INFO[ListItem.Label]</label>
                         </control>
                     </focusedlayout>
