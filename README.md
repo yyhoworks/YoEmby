@@ -18,7 +18,7 @@ YoLink (STRM / 302) + NAS SMB ──▶ Emby Server ──▶ YoEmby (同步 / 5
 
 ## 实测效果（CoreELEC 21.3 `avdvplus` / S905X4）
 
-| 指标 | 改造前基线 | YoEmby (`v12.4.24-ce.3`) | 改善 |
+| 指标 | 改造前基线 | YoEmby (`v12.4.24-ce.4`) | 改善 |
 | :--- | :--- | :--- | :--- |
 | `Episode.EmbyPresentationKey` 200 次查询 | `455.30 ms`（`2.276 ms/q` 全表扫描） | **`13.57 ms`**（`0.068 ms/q` 覆盖索引） | **33.6× 加速** |
 | Kodi 空闲常驻内存 `VmRSS` | `~811 MB`（同步峰值 `1.6 GB`） | **`516~521 MB`**（开机直连稳定） | **-290 MB** |
@@ -37,9 +37,9 @@ YoLink (STRM / 302) + NAS SMB ──▶ Emby Server ──▶ YoEmby (同步 / 5
 3. **`avdvplus` 徽标、STRM 自愈与智能多版本**（`ce_opt/stream_meta.py`、`ce_opt/stream_heal.py`、`ce_opt/strm.py`）
    - 自动检测 CoreELEC `avdvplus` 的 `streamdetails` 扩展列，原生写入 `strDvProfile`（如 `8.1` / `7.6`）、`strHdrTypeAlt`（`hdr10plus` / `hdr10`）与 `strAudioProfile`（`Dolby Atmos` / `DTS:X`）。
    - 修复 HTTP/STRM 双拼 `|redirect-limit` 与 307 中文路径编码；STRM 播放后自动将 Kodi 实测流信息回写至 `emby_*.db`；支持多版本自动优先本地 SMB 或最高分辨率。
-4. **海报 307 优化与皮肤主导健康维护**（`ce_opt/artwork.py`、`ce_opt/maintenance.py`）
+4. **海报 307 优化与健康体检分页卡片仪表盘**（`ce_opt/artwork.py`、`ce_opt/maintenance.py`、`ce_opt/yoemby_health_dashboard.py`）
    - 海报 307 重定向附带 `tag` 强缓存与尺寸限宽；`artworkcache` 补齐 WebP 尺寸解析并支持可选精简 5 分钟普通章节书签（保留片头片尾跳过）。
-   - 全程采用 Kodi 原生弹窗交由 YoPlayer 皮肤渲染（打开维护工具前自动收起底层设置窗以彻底消除双层毛玻璃重影，退出自动返回设置页），支持只读健康体检、一键批量回填已播 STRM 缺流、二次确认清理旧版 `rollback/` 与索引核对。
+   - 接入 3 页 × 2×2 健康体检分页卡片仪表盘（`script-yoemby-health.xml`）：在 YoPlayer 皮肤下自动启用内置厚磨砂玻璃覆写窗口，非 YoPlayer 皮肤无缝回退至插件自带兜底 XML；打开前自动收起底层设置窗以消除双层毛玻璃重影，支持存储分布、媒体库与流信息（精确区分总缺流与本机可回填数）、一键维护修复、实时刷新与原始文本报告查看。
 5. **CoreELEC 纯观影轻装模式**（`ce_opt/lite.py`）
    - `black.*` 15 个黑屏文件按扩展名首次按需懒加载；未开启主题/影院模式时不启动 `monitor_Themes` 常驻线程、跳过每部电影/剧集的 Emby Theme/Trailer 冗余同步请求、不再自动复制 `rollback/`。
    - 隐藏 4 个无用设置分页（主题音乐 / 影院开场 / 动态库 / 备份）与 11 个转码/远程/分页/旧图片压缩分组；自动隐藏 15 项杂乱或误删类右键菜单。
@@ -54,7 +54,7 @@ YoLink (STRM / 302) + NAS SMB ──▶ Emby Server ──▶ YoEmby (同步 / 5
 ### 方式二：开发者本地校验与一键部署
 
 ```powershell
-# 运行守卫校验（版本锁、表契约、语法、上游 Diff 审计、36 项单元测试）
+# 运行守卫校验（版本锁、表契约、语法、上游 Diff 审计、41 项单元测试）
 python .\scripts\verify_guardrails.py
 
 # 通过守卫校验并部署插件到 CoreELEC（自动远端备份旧版）
@@ -70,7 +70,7 @@ python .\scripts\verify_guardrails.py
 YoEmby/
 ├── AGENTS.md                        # 项目硬规则（防屎山、禁动 CE/UI、契约红线）
 ├── plugin.service.emby-next-gen/    # 核心插件源码（基线 tag: upstream-12.4.24）
-│   └── ce_opt/                      # CoreELEC 专有优化收口目录（10 个独立纯模块）
+│   └── ce_opt/                      # CoreELEC 专有优化收口目录（11 个独立纯模块）
 ├── docs/
 │   ├── BASELINE_AUDIT.md            # 实测硬件/数据库基线、YoPlayer 契约红线与瓶颈审计
 │   └── CE_CHANGES.md                # 定制改动账本（触碰文件、回退开关、实测对比）
@@ -78,7 +78,7 @@ YoEmby/
 │   ├── verify_guardrails.py         # 契约守卫 + 语法校验 + 上游 Diff 审计 + 单测入口
 │   ├── deploy_to_ce.ps1             # 守卫校验 -> 停 Kodi -> 远端快照 -> 部署 -> 启动
 │   └── inspect_ce.ps1               # 只读采集 CE 内存、数据库体积、最近日志与异常
-├── tests/                           # 36 项纯 Python 本地单元测试
+├── tests/                           # 41 项纯 Python 本地单元测试
 └── README.md
 ```
 
