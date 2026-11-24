@@ -2,6 +2,7 @@ from urllib.parse import quote, unquote
 import xbmc
 from helper import utils
 from . import common_db
+from ce_opt import stream_meta as ce_stream_meta # [CE-OPT] CoreELEC avdvplus extended streamdetails writer
 
 if utils.DatabaseFiles["video-version"] >= 135:
     VideoversionTypes = {"regular": 1, "special": 2}
@@ -1097,6 +1098,10 @@ class VideoDatabase:
         #FLAG_HEARING_IMPAIRED = 0x0080
         #FLAG_VISUAL_IMPAIRED = 0x0100
         SQLData = ()
+        # [CE-OPT] Populate CoreELEC avdvplus strDvProfile/strHdrTypeAlt/strAudioProfile when table supports them
+        if ce_stream_meta.write_avdvplus_streamdetails(self.cursor, KodiFileId, videostream, audiostream, subtitlestream, runtime, utils.DatabaseFiles["video-version"]):
+            return
+
         self.cursor.execute("DELETE FROM streamdetails WHERE idFile = ?", (KodiFileId,))
 
         if utils.DatabaseFiles["video-version"] >= 149:

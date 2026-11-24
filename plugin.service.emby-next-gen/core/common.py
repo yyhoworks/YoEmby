@@ -2,6 +2,7 @@ import os
 import base64
 import xbmc
 from helper import utils, artworkcache
+from ce_opt import stream_meta as ce_stream_meta, strm as ce_strm # [CE-OPT] avdvplus metadata & STRM/multiversion helpers
 EmbyTypeMappingShort = {"Movie": "m", "Episode": "e", "MusicVideo": "M", "Audio": "a", "Video": "v", "TvChannel": "t", "Trailer": "T"}
 EmbyArtworkIdShort = {"Primary": "p", "Art": "a", "Banner": "b", "Disc": "d", "Logo": "l", "Thumb": "t", "Backdrop": "B", "Chapter": "c", "SeriesPrimary": "p", "AlbumPrimary": "p", "ParentBackdrop": "B", "ParentThumb": "t", "ParentLogo": "l", "ParentBanner": "b", "AlbumArtists": "p", "ArtistItems": "p"}
 MarkerTypeMapping = {"IntroStart": "Intro Start", "IntroEnd": "Intro End", "CreditsStart": "Credits"}
@@ -375,6 +376,10 @@ def set_path_filename(Item, ServerId, MediaSource, isDynamic=False):
 
     Item['KodiFullPath'] = f"{Item['KodiPath']}{Item['KodiFilename']}"
 
+    # [CE-OPT] Prevent duplicate |redirect-limit=... options and apply configurable STRM timeout
+    if ce_strm.finalize_http_paths(Item, isHttpByEmby, utils.followhttp, utils.followhttptimeout):
+        return
+
     if (Item['KodiPath'].startswith("http://127.0.0.1:57342/") or Item['KodiPath'].startswith("dav://127.0.0.1:57342/")) and Item['Type'] != "Audio":
         Item['KodiFullPath'] += "|redirect-limit=1000&failonerror=false"
         Item['KodiPath'] += "|redirect-limit=1000&failonerror=false"
@@ -412,8 +417,7 @@ def set_multipart(Item, Library):
                 set_chapters(AdditionalItem, Library.ServerData['ServerId'])
                 AdditionalItem.update({'KodiItemId': Item['KodiItemId'], 'KodiFileId': Item['KodiFileId'], 'KodiPath': Item['KodiPath'], 'LibraryId': Item['LibraryId']})
                 set_path_filename(AdditionalItem, Library.ServerData['ServerId'], {}, False)
-                set_streams(AdditionalItem)
-                StackedFilenames += (AdditionalItem['KodiFullPath'].replace(',', ' '),)
+                StackedFilenames += (AdditionalItem['KodiFullPath'].replace(',', ' '),) # [CE-OPT] Remove redundant duplicate set_streams call
 
                 if 'RunTimeTicks' in AdditionalItem and AdditionalItem['RunTimeTicks']:
                     Value = round(float(AdditionalItem['RunTimeTicks'] / 10000000.0), 6)
@@ -497,7 +501,9 @@ def set_streams(Item):
                     Codec = "dtshd_hra"
 
             if Stream['Type'] == "Audio" or Stream['Type'] == "Default":
-                MediaSource['KodiStreams']['Audio'].append({'SampleRate': Stream.get('SampleRate', None), 'BitRate': Stream.get('BitRate', None), 'codec': Codec, 'channels': Stream.get('Channels', None), 'language': Stream.get('Language', ""), 'Index': StreamIndex, 'DisplayTitle': Stream.get('DisplayTitle', "unknown").replace(chr(1), "").replace(chr(0), ""), 'default': Stream.get('IsDefault', False), 'hearingimpaired': Stream.get('IsHearingImpaired', False)})
+                AudioStreamData = {'SampleRate': Stream.get('SampleRate', None), 'BitRate': Stream.get('BitRate', None), 'codec': Codec, 'channels': Stream.get('Channels', None), 'language': Stream.get('Language', ""), 'Index': StreamIndex, 'DisplayTitle': Stream.get('DisplayTitle', "unknown").replace(chr(1), "").replace(chr(0), ""), 'default': Stream.get('IsDefault', False), 'hearingimpaired': Stream.get('IsHearingImpaired', False)}
+                ce_stream_meta.enrich_audio_stream(Stream, AudioStreamData) # [CE-OPT] Extract Atmos/DTS:X/audio profile for avdvplus
+                MediaSource['KodiStreams']['Audio'].append(AudioStreamData)
                 MediaSource['IndexMappingAudio'][int(StreamIndex)] = KodiStreamAudioIndex
                 KodiStreamAudioIndex += 1
             elif Stream['Type'] == "Video":
@@ -546,8 +552,9 @@ def set_streams(Item):
 
                     if 'Height' in Stream and Stream['Height'] and 'Width' in Stream and Stream['Width']:
                         StreamData['aspect'] = round(float(Stream['Width']) / float(Stream['Height']), 6)
-                        xbmc.log(f"EMBY.core.common: AspectRatio calculated based on width/height ratio: {Stream['Height']} / {Stream['Height']} / {StreamData['aspect']}", 1) # LOGINFO
+                        xbmc.log(f"EMBY.core.common: AspectRatio calculated based on width/height ratio: {Stream['Width']} / {Stream['Height']} / {StreamData['aspect']}", 1) # LOGINFO # [CE-OPT] Fix Width/Height log typo
 
+                ce_stream_meta.enrich_video_stream(Stream, StreamData) # [CE-OPT] Extract Emby 4.8+ HDR10+/DV Profile for avdvplus
                 MediaSource['KodiStreams']['Video'].append(StreamData)
                 MediaSource['IndexMappingVideo'][int(StreamIndex)] = KodiStreamVideoIndex
                 KodiStreamVideoIndex += 1
@@ -1615,10 +1622,11 @@ def add_multiversion(Item, EmbyType, Library, SQLs, EmbyMusicArtistIds, EmbyMusi
             SQLs["video"].add_movie_version(Item['KodiItemId'], ItemReferenced['KodiFileId'], ItemReferenced['KodiPathId'], ItemReferenced['KodiFilename'], ItemReferenced['KodiDateCreated'], ItemReferenced['KodiStackedFilename'], MediaSource['Name'], "movie", "regular")
             SQLs['emby'].add_reference_movie(ItemReferenced['Id'], Item['LibraryId'], Item['KodiItemId'], ItemReferenced['KodiFileId'], ItemReferenced['PresentationUniqueKey'], MediaSource['Path'], ItemReferenced['KodiPathId'])
 
-            # Change default movie version to highest resolution (width)
+            # Change default movie version to highest resolution / preferred local SMB
             if utils.SyncHighestResolutionAsDefault:
-                if MovieDefault[1] and MediaSource['KodiStreams']['Video'] and MediaSource['KodiStreams']['Video'][0]['width'] and MediaSource['KodiStreams']['Video'][0]['width'] > MovieDefault[1]:
-                    MovieDefault = (True, MediaSource['KodiStreams']['Video'][0]['width'], ItemReferenced['KodiFileId'], ItemReferenced['KodiPathId'], ItemReferenced['KodiPath'])
+                CandWidth = MediaSource['KodiStreams']['Video'][0]['width'] if MediaSource['KodiStreams']['Video'] else 0
+                if ce_strm.should_prefer_movie_version(ItemReferenced['KodiPath'], CandWidth, MovieDefault[4], MovieDefault[1]): # [CE-OPT] Fix unprobed STRM default lock & prefer SMB
+                    MovieDefault = (True, CandWidth, ItemReferenced['KodiFileId'], ItemReferenced['KodiPathId'], ItemReferenced['KodiPath'])
 
             # Change default movie version to local content
             if utils.SyncLocalOverPlugins:

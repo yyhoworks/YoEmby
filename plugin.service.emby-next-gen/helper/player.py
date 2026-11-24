@@ -8,7 +8,7 @@ from database import dbio
 from emby import listitem
 from helper import utils, playerops, queue, cache
 from dialogs import skipintrocredits
-from ce_opt import config as ce_config, safety as ce_safety # [CE-OPT] Import safety guards
+from ce_opt import config as ce_config, safety as ce_safety, stream_heal as ce_stream_heal, strm as ce_strm # [CE-OPT] Import safety, heal & STRM helpers
 TrackerPaused = False
 VideoPlayback = "READY"
 VideoPlaybackOld = "READY"
@@ -276,13 +276,13 @@ def _PlayerCommands_loop():
 
                             # Autoselect mediasource by highest resolution
                             if utils.AutoSelectHighestResolution:
-                                # [CE-OPT] Fix hardcoded VideoStreams[0][4] and empty-stream crash on STRM
-                                MediaIndex = ce_safety.safe_highest_resolution_index_native(MediaSources, VideoStreams)
+                                # [CE-OPT] Smart SMB/STRM multiversion selection (safe on empty VideoStreams)
+                                MediaIndex = ce_strm.select_best_mediasource_native(MediaSources, VideoStreams)
                             else: # Manual select mediasource
                                 Selection = []
 
                                 for MediaSource in MediaSources:
-                                    Selection.append(f"{MediaSource[3]} - {utils.SizeToText(float(MediaSource[4]))} - {MediaSource[2]}")
+                                    Selection.append(ce_strm.format_version_label(MediaSource[3], utils.SizeToText(float(MediaSource[4])), MediaSource[2])) # [CE-OPT] Tag [SMB]/[STRM] in picker
 
                                 MediaIndex = utils.Dialog.select(utils.Translate(33453), Selection)
 
@@ -615,6 +615,7 @@ def stop_playback(delete, PlaybackEnded):
         utils.ItemSkipUpdate.append(str(PlayingItemLocal[0]['ItemId'])) # Skip Emby progress updates as Kodi keeps track
 
     PlaylistEmby[PlayingItemLocal[5]] = PlayingItemLocal[4].API.session_stop(PlayingItemLocal[0], PlaylistKodi[PlayingItemLocal[5]], PlaylistEmby[PlayingItemLocal[5]])
+    ce_stream_heal.heal_after_playback(PlayingItemLocal[4].ServerData['ServerId'], PlayingItemLocal[0].get('ItemId'), PlayingItemLocal[6], dbio) # [CE-OPT] Backfill missing STRM streams from Kodi probed streamdetails
     close_SkipIntroDialog()
     close_SkipCreditsDialog()
 

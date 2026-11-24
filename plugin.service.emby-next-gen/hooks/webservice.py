@@ -6,7 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
-from ce_opt import config as ce_config, safety as ce_safety # [CE-OPT] Import safety guards
+from ce_opt import config as ce_config, safety as ce_safety, strm as ce_strm # [CE-OPT] Import safety & STRM helpers
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -592,7 +592,8 @@ def send_redirect(client, MetaData, Data, AddCache=True):
         httpcache.add(MetaData, Data)
 
     if MetaData['isHttp'] and utils.followhttp:
-        SendData = f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0]['Path']}\r\nContent-Length: 0\r\nAccept-Ranges: none\r\n\r\n".encode()
+        RedirectLoc = ce_strm.prepare_redirect_location(MetaData['MediaSources'][MetaData['SelectionIndexMediaSource']][0]['Path']) # [CE-OPT] Safe URL encoding for cloud 307 Location
+        SendData = f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {RedirectLoc}\r\nContent-Length: 0\r\nAccept-Ranges: none\r\n\r\n".encode()
     else:
         Path = build_Path(MetaData, Data)
 
@@ -800,8 +801,8 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
     elif utils.SelectDefaultVideoversion: # Autoselect mediasource by default version
         MetaData['SelectionIndexMediaSource'] = 0
     elif utils.AutoSelectHighestResolution: # Autoselect mediasource by highest resolution
-        # [CE-OPT] Safe highest-resolution selection when STRM VideoStreams is empty
-        MetaData['SelectionIndexMediaSource'] = ce_safety.safe_highest_resolution_index_webservice(MetaData['MediaSources'])
+        # [CE-OPT] Smart SMB/STRM multiversion selection (safe on empty STRM streams)
+        MetaData['SelectionIndexMediaSource'] = ce_strm.select_best_mediasource_webservice(MetaData['MediaSources'])
     else: # Manual select mediasource
         if add_DelayedContent(MetaData, client):
             return
@@ -809,7 +810,7 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
         Selection = []
 
         for MediaSource in MetaData['MediaSources']:
-            Selection.append(f"{MediaSource[0]['Name']} - {utils.SizeToText(float(MediaSource[0]['Size']))} - {MediaSource[0]['Path']}")
+            Selection.append(ce_strm.format_version_label(MediaSource[0]['Name'], utils.SizeToText(float(MediaSource[0]['Size'])), MediaSource[0]['Path'])) # [CE-OPT] Tag [SMB]/[STRM] in picker
 
         MetaData['SelectionIndexMediaSource'] = utils.Dialog.select(utils.Translate(33453), Selection)
 
