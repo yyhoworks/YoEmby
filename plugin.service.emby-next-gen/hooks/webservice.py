@@ -6,6 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
+from ce_opt import config as ce_config, safety as ce_safety # [CE-OPT] Import safety guards
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -169,7 +170,25 @@ def Listen():
 
 def worker_Query(WorkerNumber):  # thread by caller
     if utils.DebugLog: xbmc.log(f"EMBY.hooks.webservice (DEBUG): THREAD: --->[ worker_Query/{WorkerNumber} ]", 1) # LOGDEBUG
+    # [CE-OPT] Protect 57342 worker thread against unhandled exceptions so workers never die permanently
+    ActiveClient = [None]
 
+    while Running:
+        try:
+            _worker_Query_loop(WorkerNumber, ActiveClient)
+            return
+        except Exception as Error:
+            xbmc.log(f"EMBY.hooks.webservice: [ worker_Query/{WorkerNumber} ] recovered from error: {Error}", 3) # LOGERROR
+            if ActiveClient[0] is not None:
+                try:
+                    ActiveClient[0].close()
+                except Exception:
+                    pass
+                ActiveClient[0] = None
+            if not ce_config.is_enabled("ce_safe_workers"):
+                raise
+
+def _worker_Query_loop(WorkerNumber, ActiveClient):
     while Running:
         Data = WorkerQueue.get()
 
@@ -178,10 +197,14 @@ def worker_Query(WorkerNumber):  # thread by caller
             return
 
         client = Data
+        ActiveClient[0] = client # [CE-OPT] Track active client socket for exception cleanup
         client.settimeout(None)
-        data = client.recv(16384).decode()
+        data, IncomingData = ce_safety.decode_http_request(client.recv(16384)) # [CE-OPT] Safe UTF-8 decode & malformed check
         if utils.DebugLog: xbmc.log(f"EMBY.hooks.webservice: [ worker_Query/{WorkerNumber} ] Incoming Data: {data}", 1) # LOGDEBUG
-        IncomingData = data.split(' ')
+        if len(IncomingData) < 2: # [CE-OPT] Ignore empty/incomplete client probes cleanly
+            client.close()
+            ActiveClient[0] = None
+            continue
 
         if IncomingData[0] in ("PROPFIND", "PROPPATCH", "MKCOL", "COPY", "MOVE", "DELETE", "LOCK", "UNLOCK"): # webdav methodS, currently not supported
             client.send(sendHeadNotImplemented)
@@ -530,6 +553,7 @@ def worker_Query(WorkerNumber):  # thread by caller
                 client.send(sendOK)
 
         client.close()
+        ActiveClient[0] = None # [CE-OPT] Clear closed client socket reference
         del client
         del IncomingData
 
@@ -634,11 +658,12 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
 
     # Load parameters from url request
     MetaData = metadata.load_MetaData(Payload, isPicture, isAudio)
-    MetaData['ETag'] = f'{str(uuid.uuid4()).replace("-", "")}{Payload[-5:]}'
 
-    if not MetaData: # Invalid request
+    if not MetaData: # Invalid request # [CE-OPT] Check empty MetaData before assigning ETag
         client.send(sendNotFound)
         return
+
+    MetaData['ETag'] = f'{str(uuid.uuid4()).replace("-", "")}{Payload[-5:]}'
 
     if MetaData['Type'] in ("movie", "episode", "musicvideo", "tvchannel", "video"):
         playerops.PlayerId = 1
@@ -775,13 +800,8 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
     elif utils.SelectDefaultVideoversion: # Autoselect mediasource by default version
         MetaData['SelectionIndexMediaSource'] = 0
     elif utils.AutoSelectHighestResolution: # Autoselect mediasource by highest resolution
-        HighestResolution = 0
-        MetaData['SelectionIndexMediaSource'] = 0
-
-        for MediaSourceIndex, MediaSource in enumerate(MetaData['MediaSources']):
-            if HighestResolution < MediaSource[1][0]['Width']:
-                HighestResolution = MediaSource[1][0]['Width']
-                MetaData['SelectionIndexMediaSource'] = MediaSourceIndex
+        # [CE-OPT] Safe highest-resolution selection when STRM VideoStreams is empty
+        MetaData['SelectionIndexMediaSource'] = ce_safety.safe_highest_resolution_index_webservice(MetaData['MediaSources'])
     else: # Manual select mediasource
         if add_DelayedContent(MetaData, client):
             return
@@ -851,16 +871,14 @@ def SubTitlesAdd(MetaData):
                 SubtitleIndexAdded = playerops.AddSubtitle(Path)
 
                 if SubtitleIndexSelect == -1:
-                    if SubtitlesLanguageDefault == "forced_only":
-                        if Subtitle.get('Forced', False):
-                            SubtitleIndexSelect = SubtitleIndexAdded
-                    elif SubtitlesLanguageDefault in Subtitle['DisplayTitle'].lower() or SubtitlesLanguageDefault in Subtitle['language'].lower():
+                    # [CE-OPT] Avoid matching every subtitle when default language is empty
+                    if ce_safety.match_external_subtitle(SubtitlesLanguageDefault, Subtitle):
                         SubtitleIndexSelect = SubtitleIndexAdded
 
     if SubtitleIndexSelect != -1:
         playerops.SelectSubtitle(SubtitleIndexSelect)
         playerops.EnableSubtitle(SubtitleEnable)
-    else:
+    elif ce_safety.should_disable_subtitles_on_no_external_match(FileSettings): # [CE-OPT] Preserve embedded subtitles when no external sub matched
         playerops.EnableSubtitle(False)
 
 def LoadData(MetaData, client):
@@ -1099,7 +1117,7 @@ def add_DelayedContent(MetaData, client):
 
 def set_DelayedContent(ETag, Data, Index, KodiId):
     with utils.SafeLock(DelayedContentLock):
-        if Index:
+        if Index or ETag not in DelayedContent: # [CE-OPT] Prevent KeyError on send_redirect fallback
             DelayedContent[ETag] = [Data, Index]
         else:
             DelayedContent[ETag][0] = Data
@@ -1125,7 +1143,7 @@ def wait_for_Embyserver(client, ServerId):
 
             CounterOnlineCondintion = 0
 
-            while CounterOnlineCondintion >= 30: # 3 Seconds timeout
+            while CounterOnlineCondintion < 10: # [CE-OPT] Fix inverted >=30 loop and release lock during wait instead of sleep(1)
                 if utils.EmbyServerOnlineCondition.wait(timeout=0.1):
                     break
 
@@ -1137,7 +1155,6 @@ def wait_for_Embyserver(client, ServerId):
                 return False
 
             CounterRetry += 1
-            utils.sleep(1)
 
             if ServerId not in utils.EmbyServers:
                 if CounterRetry >= 10: # 10 Seconds timeout when ServerId not found

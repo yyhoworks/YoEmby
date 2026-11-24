@@ -38,11 +38,18 @@ def DBVacuum():
             if utils.DebugLog: xbmc.log("EMBY.database.dbio (DEBUG): CONDITION: ---<[ DBConnectionsRW ]", 1) # LOGDEBUG
             DBConnectionsRW[DBID][3] = True
 
+            RetryCount = 0 # [CE-OPT] Prevent infinite spin loop during shutdown/lock
             while True:
                 try:
                     DBConnectionsRW[DBID][0] = sqlite3.connect(DBFile, timeout=0.1)
                     break
-                except:
+                except Exception:
+                    RetryCount += 1
+                    if utils.SystemShutdown or RetryCount >= 300:
+                        DBConnectionsRW[DBID][3] = False
+                        DBConnectionsRW[DBID][2].notify_all()
+                        xbmc.log(f"EMBY.database.dbio: DBVacuum connect aborted ({DBID})", 2) # LOGWARNING
+                        return
                     xbmc.sleep(100)
 
             DBConnectionsRW[DBID][1] = DBConnectionsRW[DBID][0].cursor()
@@ -106,7 +113,7 @@ def DBCloseRO(DBID, TaskId):
     if DBIDThreadID in DBConnectionsRO:
         DBConnectionsRO[DBIDThreadID][1].close()
         DBConnectionsRO[DBIDThreadID][0].close()
-        DBConnectionsRO[DBIDThreadID] = [None, None]
+        del DBConnectionsRO[DBIDThreadID] # [CE-OPT] Delete key to prevent unbounded dict leak
         if utils.DebugLog: xbmc.log(f"EMBY.database.dbio (DEBUG): ---< DBRO: {DBIDThreadID}", 1) # LOGDEBUG
     else:
         xbmc.log(f"EMBY.database.dbio: DBIDThreadID not found {DBIDThreadID}", 3) # LOGERROR
@@ -130,6 +137,7 @@ def DBOpenRW(Databases, TaskId, SQLs):
                 if utils.DebugLog: xbmc.log("EMBY.database.dbio (DEBUG): CONDITION: ---<[ DBConnectionsRW ]", 1) # LOGDEBUG
                 DBConnectionsRW[DBID][3] = True
 
+                RetryCount = 0 # [CE-OPT] Guard DBOpenRW against shutdown deadlock
                 while True:
                     try:
                         DBConnectionsRW[DBID][0] = sqlite3.connect(utils.DatabaseFiles[DBID], timeout=0.1, check_same_thread=False)
@@ -140,11 +148,18 @@ def DBOpenRW(Databases, TaskId, SQLs):
                         DBConnectionsRW[DBID][0].execute("PRAGMA secure_delete=OFF")
                         DBConnectionsRW[DBID][1].execute("BEGIN IMMEDIATE TRANSACTION")
                         break
-                    except:
+                    except Exception as Error:
                         if DBConnectionsRW[DBID][0]:
                             DBConnectionsRW[DBID][0].close()
                             DBConnectionsRW[DBID][0] = None
                             DBConnectionsRW[DBID][1] = None
+
+                        RetryCount += 1
+                        if utils.SystemShutdown or RetryCount >= 300:
+                            DBConnectionsRW[DBID][3] = False
+                            DBConnectionsRW[DBID][2].notify_all()
+                            xbmc.log(f"EMBY.database.dbio: DBOpenRW aborted ({DBID}/{TaskId}): {Error}", 3) # LOGERROR
+                            raise
 
                         xbmc.sleep(100)
 

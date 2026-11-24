@@ -1319,6 +1319,10 @@ def InitSettings():
     xbmcgui.Window(10000).setProperty('EmbySettings', str(enableContextSettingsOptions))
     xbmcgui.Window(10000).setProperty('EmbyPlayRandom', str(enableContextPlayRandom))
 
+    # [CE-OPT] Reload ce_opt configuration alongside addon settings
+    from ce_opt import config as ce_config
+    ce_config.reload(Addon)
+
     with SafeLock(SettingsChangedCondition):
         SettingsChangedCondition.notify_all()
 

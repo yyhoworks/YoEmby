@@ -8,6 +8,7 @@ from database import dbio
 from emby import listitem
 from helper import utils, playerops, queue, cache
 from dialogs import skipintrocredits
+from ce_opt import config as ce_config, safety as ce_safety # [CE-OPT] Import safety guards
 TrackerPaused = False
 VideoPlayback = "READY"
 VideoPlaybackOld = "READY"
@@ -50,6 +51,17 @@ ProgressBarEnable = -1
 # Player events (queued by monitor notifications)
 def PlayerCommands():
     if utils.DebugLog: xbmc.log("EMBY.helper.player (DEBUG): THREAD: --->[ player commands ]", 1) # LOGDEBUG
+    # [CE-OPT] Protect single PlayerCommands thread so transient playback errors never kill event sync
+    while not utils.SystemShutdown:
+        try:
+            _PlayerCommands_loop()
+            return
+        except Exception as Error:
+            xbmc.log(f"EMBY.helper.player: PlayerCommands recovered from error: {Error}", 3) # LOGERROR
+            if not ce_config.is_enabled("ce_safe_workers"):
+                raise
+
+def _PlayerCommands_loop():
     global PlayerBusyDelay
     global TrackerPaused
     global SkipIntroJumpDone
@@ -264,15 +276,8 @@ def PlayerCommands():
 
                             # Autoselect mediasource by highest resolution
                             if utils.AutoSelectHighestResolution:
-                                HighestResolution = 0
-                                MediaIndex = 0
-
-                                for MediaSourceIndex, MediaSource in enumerate(MediaSources):
-                                    VideoStreamsWidth = int(VideoStreams[0][4]) # Resolution Width
-
-                                    if HighestResolution < VideoStreamsWidth:
-                                        HighestResolution = VideoStreamsWidth
-                                        MediaIndex = MediaSourceIndex
+                                # [CE-OPT] Fix hardcoded VideoStreams[0][4] and empty-stream crash on STRM
+                                MediaIndex = ce_safety.safe_highest_resolution_index_native(MediaSources, VideoStreams)
                             else: # Manual select mediasource
                                 Selection = []
 

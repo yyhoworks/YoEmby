@@ -454,6 +454,13 @@ class HTTP:
                     StatusCode = 603
                     break
 
+                # [CE-OPT] Treat EBADF/closed socket during teardown as clean disconnect instead of error spam
+                from ce_opt import safety as ce_safety
+                if ce_safety.is_expected_socket_close_error(error, self.Running, utils.SystemShutdown):
+                    if utils.DebugLog: xbmc.log(f"EMBY.emby.http (DEBUG): Socket IO {ConnectionId} closed cleanly: {error}", 1)
+                    StatusCode = 601
+                    break
+
                 xbmc.log(f"EMBY.emby.http: Socket IO {ConnectionId}: ({Request}): Undefined error {error} / Type: {type(error)}", 3)
                 StatusCode = 698
                 break
@@ -1004,6 +1011,8 @@ class HTTP:
                     if utils.DebugLog: xbmc.log(f"EMBY.emby.http (DEBUG): THREAD: ---<[ Websocket {self.ServerData['ServerId']} shutdown 2 ]", 1) # LOGDEBUG
                     self.disable_thread("WEBSOCKET")
                     return
+
+                continue # [CE-OPT] Fix missing continue after non-101 websocket handshake failure
 
             result = Header.get("sec-websocket-accept", "")
 
