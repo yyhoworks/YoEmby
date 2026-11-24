@@ -6,7 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
-from ce_opt import config as ce_config, safety as ce_safety, strm as ce_strm # [CE-OPT] Import safety & STRM helpers
+from ce_opt import artwork as ce_artwork, config as ce_config, safety as ce_safety, strm as ce_strm # [CE-OPT] Import ce_opt hooks
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -686,12 +686,9 @@ def GetRequest(client, Payload, isDelayedContent, isPicture, isAudio, isVideo):
         if utils.DebugLog: xbmc.log(f"EMBY.hooks.webservice (DEBUG): Load artwork: {Payload}", 1) # LOGDEBUG
 
         if not MetaData['Overlay']:
-            if utils.enableCoverArt:
-                Enhancers = "&EnableImageEnhancers=True"
-            else:
-                Enhancers = "&EnableImageEnhancers=False"
-
-            client.send(f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {utils.EmbyServers[MetaData['ServerId']].ServerData['ServerUrl']}/emby/Items/{MetaData['EmbyId']}/Images/{MetaData['ImageType']}/{MetaData['ImageIndex']}?&api_key={utils.EmbyServers[MetaData['ServerId']].ServerData['AccessToken']}{Enhancers}\r\nAccept-Ranges: none\r\nContent-Length: 0\r\n\r\n".encode())
+            # [CE-OPT] Build 307 artwork redirect with tag= and bounded maxWidth/quality
+            ArtUrl = ce_artwork.build_artwork_redirect_url(utils.EmbyServers[MetaData['ServerId']].ServerData['ServerUrl'], utils.EmbyServers[MetaData['ServerId']].ServerData['AccessToken'], MetaData['EmbyId'], MetaData['ImageType'], MetaData['ImageIndex'], MetaData.get('ImageTag', ''), utils.enableCoverArt)
+            client.send(f"HTTP/1.1 307 Temporary Redirect\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nLocation: {ArtUrl}\r\nAccept-Ranges: none\r\nContent-Length: 0\r\n\r\n".encode())
             return
 
         BinaryData, ContentType, _ = utils.image_overlay(MetaData['ImageTag'], MetaData['ServerId'], MetaData['EmbyId'], MetaData['ImageType'], MetaData['ImageIndex'], MetaData['Overlay'])

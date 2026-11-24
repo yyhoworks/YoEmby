@@ -3604,3 +3604,75 @@ msgstr "更新影人收藏"
 msgctxt "#33860"
 msgid "Restored backup from:"
 msgstr "已从以下位置恢复备份："
+
+msgctxt "#33900"
+msgid "YoEmby CE"
+msgstr "YoEmby 优化"
+
+msgctxt "#33901"
+msgid "Sync & Database"
+msgstr "同步与数据库加速"
+
+msgctxt "#33902"
+msgid "Enable CoreELEC optimizations (master switch)"
+msgstr "启用 CoreELEC 专项优化（总开关）"
+
+msgctxt "#33903"
+msgid "Coalesce WebSocket LibraryChanged bursts"
+msgstr "合并 WebSocket 变更突发事件（防抖）"
+
+msgctxt "#33904"
+msgid "Skip unchanged items by metadata fingerprint"
+msgstr "增量指纹跳过未变更条目（防重复重写）"
+
+msgctxt "#33905"
+msgid "Debounce widget refresh scans"
+msgstr "合并首页组件刷新扫描（防刷屏）"
+
+msgctxt "#33906"
+msgid "Pause background sync during playback"
+msgstr "播放期间自动暂停后台写库同步"
+
+msgctxt "#33907"
+msgid "Add CoreELEC SQLite indexes (schema-safe)"
+msgstr "启用 Emby 数据库增量索引（兼容 YoPlayer）"
+
+msgctxt "#33908"
+msgid "Apply CoreELEC SQLite cache PRAGMAs"
+msgstr "启用 SQLite 内存缓存调优（16MB）"
+
+msgctxt "#33909"
+msgid "STRM, avdvplus & Maintenance"
+msgstr "STRM、avdvplus 徽标与运维"
+
+msgctxt "#33910"
+msgid "Sync avdvplus DV Profile / HDR10+ / Atmos badges"
+msgstr "同步 avdvplus 杜比视界 Profile / HDR10+ / 全景声徽标"
+
+msgctxt "#33911"
+msgid "Auto-heal missing STRM streams after playback"
+msgstr "播后自动补齐缺流 STRM 的音视频与字幕信息"
+
+msgctxt "#33912"
+msgid "Fix HTTP/STRM redirect & timeout parameters"
+msgstr "修复 STRM 302 路径参数与中文 URL 编码"
+
+msgctxt "#33913"
+msgid "STRM HTTP connection timeout (seconds)"
+msgstr "STRM 网络连接超时（秒）"
+
+msgctxt "#33914"
+msgid "Multiversion priority policy"
+msgstr "多版本自动选源策略"
+
+msgctxt "#33915"
+msgid "Optimize artwork 307 redirects (tag + size cap)"
+msgstr "优化海报 307 重定向（带 tag 缓存与尺寸限宽）"
+
+msgctxt "#33916"
+msgid "Skip 5-minute chapter bookmarks (keep Intro/Credits)"
+msgstr "跳过普通 5 分钟章节书签（保留片头片尾跳过）"
+
+msgctxt "#33917"
+msgid "Open YoEmby healthcheck & maintenance tools"
+msgstr "打开 YoEmby 健康体检与运维工具"

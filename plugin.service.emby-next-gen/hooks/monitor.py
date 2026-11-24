@@ -145,6 +145,9 @@ def SystemEvents():
             utils.start_thread(utils.nodesreset, ())
         elif SystemEvent[0] == 'Other.databasevacuummanual':
             utils.start_thread(dbio.DBVacuum, ())
+        elif SystemEvent[0] == 'Other.ce_maintenance_menu': # [CE-OPT] Open YoEmby CoreELEC healthcheck & maintenance menu
+            from ce_opt import maintenance as ce_maintenance
+            utils.start_thread(ce_maintenance.open_maintenance_menu, (utils, dbio))
         elif SystemEvent[0] == 'Other.factoryreset':
             utils.start_thread(pluginmenu.factoryreset, (False,))
         elif SystemEvent[0] == 'Other.downloadreset':

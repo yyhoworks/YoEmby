@@ -4,6 +4,7 @@ import xbmcvfs
 import xbmc
 from database import dbio
 from . import utils
+from ce_opt import artwork as ce_artwork # [CE-OPT] WebP header parser for artworkcache
 
 EmbyArtworkIDs = {"p": "Primary", "a": "Art", "b": "Banner", "d": "Disc", "l": "Logo", "t": "Thumb", "B": "Backdrop", "c": "Chapter"}
 
@@ -18,7 +19,7 @@ def CacheAllEntries(urls, WorkerName):
         if utils.TextureCacheCancel:
             return
 
-        if IndexUrl % 1000 == 0:
+        if IndexUrl > 0 and IndexUrl % 1000 == 0: # [CE-OPT] Skip empty TextureDB RW commit at IndexUrl==0
             add_textures(ArtworkCacheItems)
             ArtworkCacheItems = 1000 * [{}]
             ArtworkCacheIndex = 0
@@ -71,7 +72,7 @@ def CacheAllEntries(urls, WorkerName):
 
         TempPath = f"{utils.FolderUserdataThumbnails}{Hash[0]}/{Hash}"
 
-        if not xbmcvfs.exists(f"{TempPath}.jpg") and not xbmcvfs.exists(f"{TempPath}.png"):
+        if not xbmcvfs.exists(f"{TempPath}.jpg") and not xbmcvfs.exists(f"{TempPath}.png") and not xbmcvfs.exists(f"{TempPath}.webp"): # [CE-OPT] Recognize cached webp artwork
             if len(Data) > 5:
                 OverlayText = unquote("-".join(Data[5:]))
                 ImageBinary, _, _ = utils.image_overlay(ImageTag, ServerId, EmbyID, ImageType, ImageIndex, OverlayText)
@@ -143,8 +144,13 @@ def get_image_metadata(ImageBinaryData, Hash):
     elif ImageBinaryData[0] == 0x89 and ImageBinaryData[1] == 0x50 and ImageBinaryData[2] == 0x4E and ImageBinaryData[3] == 0x47: # PNG
         imageformat = "png"
         width, height = struct.unpack('>ii', ImageBinaryData[16:24])
-    else: # Not supported format
-        xbmc.log(f"EMBY.helper.artworkcache: Artwork cache: invalid image format: {Hash}", 2) # LOGWARNING
+    else:
+        # [CE-OPT] Support RIFF WEBP images served by Emby 4.8+
+        width, height = ce_artwork.parse_webp_dimensions(ImageBinaryData)
+        if width and height:
+            imageformat = "webp"
+        else:
+            xbmc.log(f"EMBY.helper.artworkcache: Artwork cache: invalid image format: {Hash}", 2) # LOGWARNING
 
     if utils.DebugLog: xbmc.log(f"EMBY.helper.artworkcache (DEBUG): Artwork cache image data: {width} / {height} / {Hash}", 1) # LOGDEBUG
     return width, height, imageformat

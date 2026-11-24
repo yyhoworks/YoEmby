@@ -2,7 +2,7 @@ import os
 import base64
 import xbmc
 from helper import utils, artworkcache
-from ce_opt import stream_meta as ce_stream_meta, strm as ce_strm # [CE-OPT] avdvplus metadata & STRM/multiversion helpers
+from ce_opt import config as ce_config, stream_meta as ce_stream_meta, strm as ce_strm # [CE-OPT] avdvplus metadata, config & STRM helpers
 EmbyTypeMappingShort = {"Movie": "m", "Episode": "e", "MusicVideo": "M", "Audio": "a", "Video": "v", "TvChannel": "t", "Trailer": "T"}
 EmbyArtworkIdShort = {"Primary": "p", "Art": "a", "Banner": "b", "Disc": "d", "Logo": "l", "Thumb": "t", "Backdrop": "B", "Chapter": "c", "SeriesPrimary": "p", "AlbumPrimary": "p", "ParentBackdrop": "B", "ParentThumb": "t", "ParentLogo": "l", "ParentBanner": "b", "AlbumArtists": "p", "ArtistItems": "p"}
 MarkerTypeMapping = {"IntroStart": "Intro Start", "IntroEnd": "Intro End", "CreditsStart": "Credits"}
@@ -868,7 +868,7 @@ def load_chapter(MediaSource, Chapter, Index, ServerId, ItemId):
                     MediaSource['CreditsPositionTicks'] = Chapter["StartPositionTicks"]
 
                 MarkerLabel = utils.image_text_encode(Chapter['Name'])
-            elif " 0" in Chapter['Name'] or Chapter["StartPositionTicks"] % 300 != 0: # embedded chapter
+            elif ce_config.is_enabled("ce_skip_chapter_bookmarks") or " 0" in Chapter['Name'] or Chapter["StartPositionTicks"] % 300 != 0: # embedded chapter # [CE-OPT] Optional skip of non-marker 5-min chapter bookmarks
                 return
         else:
             Chapter["Name"] = "unknown"
