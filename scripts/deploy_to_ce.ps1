@@ -15,7 +15,8 @@ if ($LASTEXITCODE -ne 0) { throw "YoEmby guardrail check failed. Deployment abor
 
 Write-Host "[2/5] Packaging $AddonDir ..." -ForegroundColor Cyan
 if (Test-Path $TempZip) { Remove-Item $TempZip -Force }
-Compress-Archive -Path $AddonDir -DestinationPath $TempZip -CompressionLevel Fast
+python -c "import os, zipfile; src=r'$AddonDir'; dst=r'$TempZip'; base=os.path.dirname(src); zf=zipfile.ZipFile(dst,'w',zipfile.ZIP_DEFLATED,compresslevel=1); [zf.write(os.path.join(r,f), os.path.relpath(os.path.join(r,f), base)) for r,d,fs in os.walk(src) if '__pycache__' not in r.split(os.sep) for f in fs if not f.endswith('.pyc')]; zf.close()"
+if ($LASTEXITCODE -ne 0) { throw "Packaging failed." }
 
 Write-Host "[3/5] Stopping Kodi and creating remote backup on $HostAlias ..." -ForegroundColor Cyan
 if ($SkipBackup) {
