@@ -6,6 +6,7 @@ from core import movies, videos, musicvideo, folder, boxsets, genre, musicgenre,
 from helper import utils, cache, artworkcache
 from hooks import favorites
 from . import dbio
+from ce_opt import sync_fast as ce_sync_fast # [CE-OPT] Item fingerprint dedup during incremental sync
 
 LockPause = threading.Lock()
 LockPauseBusy = threading.Lock()
@@ -1031,9 +1032,18 @@ class Library:
     # Process item operations
     def update_Item(self, ProgressValue, ItemIndex, Item, SQLs, KodiDBs, IncrementalSync, ClassObject, WorkerId):
         self.set_recording_type(Item)
+        # [CE-OPT] Skip full rewrite if incremental item fingerprint matches cached digest
+        SkipUnchanged, CeDigest = ce_sync_fast.check_or_prepare_fingerprint(self.ServerData['ServerId'], Item, IncrementalSync, SQLs)
+
+        if SkipUnchanged:
+            if utils.DebugLog: xbmc.log(f"EMBY.database.library (DEBUG): [ CE-OPT ] Skip unchanged {Item['Type']} {Item.get('Id')}", 1)
+            del Item
+            return True
 
         with utils.SafeLock(LockPause):
             Ret = ClassObject.change(Item, IncrementalSync)
+
+        ce_sync_fast.commit_fingerprint(self.ServerData['ServerId'], Item.get('Id'), CeDigest) # [CE-OPT] Record written fingerprint
 
         if "Name" in Item:
             ProgressMsg = Item.get('Name', "unknown")
@@ -1076,6 +1086,7 @@ class Library:
 
     def remove_Item(self, ProgressValue, ItemIndex, Item, SQLs, KodiDBs, IncrementalSync, ClassObject):
         utils.update_ProgressBar(self.RemoveId, ProgressValue, f"{Item['Type']}: {ItemIndex}", str(Item['Id']))
+        ce_sync_fast.invalidate_item_fingerprint(self.ServerData['ServerId'], Item.get('Id')) # [CE-OPT] Drop cached fingerprint on remove
 
         with utils.SafeLock(LockPause):
             ClassObject.remove(Item, IncrementalSync)

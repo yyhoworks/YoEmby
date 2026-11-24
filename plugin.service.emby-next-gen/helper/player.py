@@ -338,7 +338,7 @@ def _PlayerCommands_loop():
             with utils.SafeLock(playerops.StoppedCondition):
                 playerops.StoppedCondition.notify_all()
 
-            if utils.PauseSyncDuringPlayback:
+            if utils.PauseSyncDuringPlayback or ce_config.is_enabled("ce_pause_sync_during_playback"): # [CE-OPT] Pause background sync during playback to prevent STRM stutter
                 utils.update_SyncPause('playing', True)
                 utils.set_SyncLock()
 

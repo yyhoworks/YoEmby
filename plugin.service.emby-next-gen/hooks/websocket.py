@@ -3,6 +3,7 @@ import json
 import xbmc
 from helper import utils, playerops, queue, player
 from database import dbio
+from ce_opt import sync_fast as ce_sync_fast # [CE-OPT] LibraryChanged debounce & fingerprint invalidation
 
 class WebSocket:
     def __init__(self, ServerData, ThreadsRunningCondition, EmbySession, API, Library, WebsocketRunning, WebsocketMessageQueue):
@@ -18,6 +19,7 @@ class WebSocket:
         self.RefreshProgressInit = False
         self.EPGRefresh = False
         self.LibraryChangedQueue = queue.Queue()
+        self._ce_coalescer = ce_sync_fast.LibraryChangedCoalescer(self.LibraryChangedQueue.put) # [CE-OPT] Coalesce rapid LibraryChanged bursts
         self.ProgressCondition = threading.Condition(threading.Lock())
         self.ThreadsRunningCondition = ThreadsRunningCondition
         self.EmbyServerSyncCheckIdleEvent = threading.Event()
@@ -43,6 +45,7 @@ class WebSocket:
             IncomingData = self.WebsocketMessageQueue.get()
 
             if IncomingData == "QUIT":
+                self._ce_coalescer.cancel() # [CE-OPT] Cancel pending debounce timer on shutdown
                 self.LibraryChangedQueue.put("QUIT")
                 if utils.DebugLog: xbmc.log(f"EMBY.hooks.websocket (DEBUG): THREAD: ---<[ Emby server {self.ServerData['ServerId']}: message ]", 1) # LOGDEBUG
                 break
@@ -382,6 +385,7 @@ class WebSocket:
                     utils.ItemSkipUpdate.remove(RemoveSkippedItem)
 
                 if UpdateData:
+                    ce_sync_fast.invalidate_item_fingerprint(self.ServerData['ServerId'], [u[0] for u in UpdateData]) # [CE-OPT] Invalidate cached fingerprint on UserDataChanged
                     self.LibraryChangedQueue.put((("userdata", UpdateData),))
             elif IncomingData['MessageType'] == 'LibraryChanged':
                 xbmc.log(f"EMBY.hooks.websocket: [ Emby server {self.ServerData['ServerId']}: LibraryChanged ] {IncomingData['Data']}", 1) # LOGINFO
@@ -398,11 +402,8 @@ class WebSocket:
 
                 UpdateItemIds = list(dict.fromkeys(UpdateItemIds)) # filter duplicates
 
-                if IncomingData['Data']['ItemsRemoved']:
-                    self.LibraryChangedQueue.put((("remove", IncomingData['Data']['ItemsRemoved']),))
-
-                if UpdateItemIds:
-                    self.LibraryChangedQueue.put((("update", UpdateItemIds),))
+                # [CE-OPT] Coalesce bursty LibraryChanged remove/update events to avoid O(N^2) season storms
+                self._ce_coalescer.submit(IncomingData['Data']['ItemsRemoved'], UpdateItemIds)
             elif IncomingData['MessageType'] == 'ServerRestarting':
                 xbmc.log(f"EMBY.hooks.websocket: [ Emby server {self.ServerData['ServerId']}: ServerRestarting ]", 1) # LOGINFO
                 self.close_EmbyServerBusy()

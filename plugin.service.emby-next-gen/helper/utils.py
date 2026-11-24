@@ -467,6 +467,13 @@ def clear_SyncPause():
         SyncPauseCondition.notify_all()
 
 def refresh_widgets(isVideo):
+    # [CE-OPT] Debounce bursty EMBY_widget_refresh_trigger scans
+    from ce_opt import sync_fast as ce_sync_fast
+    ce_sync_fast.widget_debouncer.trigger(isVideo, _refresh_widgets_now)
+
+def _refresh_widgets_now(isVideo):
+    if SystemShutdown:
+        return
     if isVideo and WidgetRefresh['video']:
         return
 

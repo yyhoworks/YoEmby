@@ -4,6 +4,7 @@ import xbmcvfs
 import xbmc
 from helper import utils
 from . import emby_db, video_db, music_db, texture_db, addon_db, common_db
+from ce_opt import db_opt as ce_db_opt # [CE-OPT] CoreELEC SQLite PRAGMA tuning
 
 DBConnectionsRW = {}
 DBConnectionsRO = {}
@@ -89,6 +90,7 @@ def DBOpenRO(DBID, TaskId):
     DBConnectionsRO[DBIDThreadID] = [sqlite3.connect(f"file:{utils.DatabaseFiles[DBID]}?mode=ro", uri=True, timeout=999999, check_same_thread=False), None]
     DBConnectionsRO[DBIDThreadID][1] = DBConnectionsRO[DBIDThreadID][0].cursor()
     DBConnectionsRO[DBIDThreadID][0].execute("PRAGMA temp_store=MEMORY")
+    ce_db_opt.apply_connection_pragmas(DBConnectionsRO[DBIDThreadID][0], readonly=True) # [CE-OPT] Tune RO cache_size & query_only
 
     if DBID == 'video':
         return video_db.VideoDatabase(DBConnectionsRO[DBIDThreadID][1])
@@ -146,6 +148,7 @@ def DBOpenRW(Databases, TaskId, SQLs):
                         DBConnectionsRW[DBID][0].execute("PRAGMA journal_mode=WAL")
                         DBConnectionsRW[DBID][0].execute("PRAGMA synchronous=NORMAL")
                         DBConnectionsRW[DBID][0].execute("PRAGMA secure_delete=OFF")
+                        ce_db_opt.apply_connection_pragmas(DBConnectionsRW[DBID][0], readonly=False) # [CE-OPT] Tune RW cache_size
                         DBConnectionsRW[DBID][1].execute("BEGIN IMMEDIATE TRANSACTION")
                         break
                     except Exception as Error:

@@ -1,6 +1,7 @@
 import xbmc
 from helper import utils
 from . import common_db
+from ce_opt import db_opt as ce_db_opt # [CE-OPT] Additive SQLite indexes for YoEmby/YoPlayer queries
 
 EmbyTypes = ("Movie", "Series", "Season", "Episode", "Audio", "MusicAlbum", "MusicArtist", "Genre", "MusicGenre", "Video", "MusicVideo", "BoxSet", "Tag", "Studio", "Playlist", "Person", "Trailer", "PhotoAlbum", "Photo", "Folder") # Folder must be on last position
 
@@ -338,6 +339,8 @@ class EmbyDatabase:
                 self.cursor.execute("ANALYZE")
                 self.cursor.connection.commit()
                 self.cursor.execute("BEGIN IMMEDIATE TRANSACTION")
+
+            ce_db_opt.ensure_emby_indexes(self.cursor, True) # [CE-OPT] Apply pure-additive PresentationKey/KodiParentId/Video indexes
         except Exception as Error:
             xbmc.log(f"EMBY.database.emby_db: Database add index error: {Error}", 3) # LOGERROR
 
@@ -360,6 +363,7 @@ class EmbyDatabase:
             self.cursor.execute("DROP INDEX IF EXISTS idx_Video_EmbyParentType_KodiParentId")
             self.cursor.execute("DROP INDEX IF EXISTS idx_Audio_EmbyExtraType")
             self.cursor.execute("DROP INDEX IF EXISTS idx_Video_EmbyExtraType")
+            ce_db_opt.drop_emby_indexes(self.cursor) # [CE-OPT] Drop additive indexes during bulk rebuild
             self.cursor.execute("ANALYZE")
             self.cursor.connection.commit()
             self.cursor.execute("BEGIN IMMEDIATE TRANSACTION")

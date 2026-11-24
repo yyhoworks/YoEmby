@@ -677,4 +677,7 @@ def ShutDown():
     SettingsChangedEvent.set()
     SystemEventsQueue.put("QUIT")
     SystemScansQueue.put("QUIT")
+    # [CE-OPT] Cancel any pending widget debounce timers cleanly on shutdown
+    from ce_opt import sync_fast as ce_sync_fast
+    ce_sync_fast.widget_debouncer.cancel_all()
     xbmc.log("EMBY.hooks.monitor: Exit Emby-next-gen", 1) # LOGINFO
