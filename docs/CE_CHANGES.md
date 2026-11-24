@@ -15,6 +15,20 @@
 | Batch 5 (`6b82eef`) | 10-foot 电视 UI 重构与设置页精简 | `resources/settings.xml`, `en_gb`/`zh_cn` `strings.po`, `1080i/script-emby-ce-maintenance.xml`, `1080i/script-emby-skip*.xml`, `1080i/script-emby-context.xml` | `ce_opt/maintenance_ui.py` | `ce_enabled`（含 `<dependencies>` 自动联动灰显） | 彻底消除 YoPlayer 皮肤下半透明 `DialogTextViewer` 叠加重影（插件独立不透明黑曜石 `WindowXMLDialog` 一体化摘要/明细/一键运维面板）；「YoEmby 优化」基本层级从 15 项精简至 4 项（顶部维护入口 + 总开关 + 本地化 `spinner` 多版本策略 + 精简书签 + 全中文 `help` 提示）；跳过片头/片尾改为右下角 Infuse 风格高对比悬浮胶囊避让字幕；上下文菜单琥珀金高亮并去除左右键误关；单测 32/32 通过 |
 | Batch 6 (`ec684a2`) | CoreELEC 纯观影轻装模式与无用功能裁剪 | `hooks/monitor.py`, `hooks/webservice.py`, `core/movies.py`, `core/series.py`, `database/library.py`, `helper/utils.py`, `resources/settings.xml` | `ce_opt/lite.py` | `ce_lite_mode`（专家级开关，关闭或关总开关即完整恢复上游行为） | `black.*` 15 个黑屏文件改为按扩展名首次按需懒加载（`hooks/webservice.py` 净删 76 行，省 ~4.3 MB 启动内存与 15 次闪存读取）；主题未启用时不启动 `monitor_Themes` 常驻线程且跳过每部电影/剧集的 Emby Theme/Trailer 冗余同步请求；停止自动复制 33 MB `rollback/`；设置页原生 `<visible>false</visible>` 隐藏 4 个无用分页（主题音乐/影院开场/动态库/备份）与 11 个转码/远程/分页/压缩分组；默认屏蔽 15 项杂乱或误删类右键菜单；单测 36/36 通过 |
 | Batch 5.1 (`1bd106c`) | 视觉交还皮肤主导（移除自定义黑框，中性化默认覆盖层） | `resources/skins/default/1080i/script-emby-skip*.xml`, `script-emby-context.xml`（并移除 `script-emby-ce-maintenance.xml`） | 精简 `ce_opt/maintenance.py`（移除 `maintenance_ui.py`） | 全程原生 Kodi 弹窗，皮肤自动接管全部主题与材质 | 移除自定义暗色维护弹窗与硬编码亮黄/红绿配色；`open_maintenance_menu()` 打开前自动收起底层 `DialogAddonSettings`（彻底避免双层毛玻璃透字重影），退出时自动切回设置页，使用无 `[COLOR]` 纯文本动态摘要供 `Dialog.select`/`textviewer`/`yesno`/`DialogProgressBG` 由 YoPlayer 皮肤原生渲染；跳过片头/片尾与右键菜单改为中性灰白微透兜底（皮肤侧放置同名 XML 即可自动覆盖）；单测 36/36 通过，实机 0 报错 |
+| Batch 7 | YoEmby 健康体检分页卡片仪表盘（方案 3） | 新增 `resources/skins/default/1080i/script-yoemby-health.xml`（非 YoPlayer 皮肤兜底 XML；零改动既有上游 Python 文件） | `ce_opt/yoemby_health_dashboard.py`, 升级 `ce_opt/maintenance.py` | 自动匹配 YoPlayer 皮肤同名厚磨砂覆写窗口，非 YoPlayer 皮肤无缝回退至兜底 XML | 接入 `open_health_dashboard(...)` 3 页 × 2×2 分页卡片仪表盘，直接构造结构化 `report_data` 并保留 `raw_text` 供「查看原始报告」使用；绑定 `fix_missing_streams` / `clean_rollback` / `rebuild_index` / `refresh` 回调并在维护后自动刷新卡片与原始报告；精确拆分「Emby 总缺流」与「本机可回填」指标避免未播 STRM 误报；严格遵循控件 ID（`1001`/`1002`/`1003`/`1009`/`1101`-`1103`/`2000`/`3001`/`3002`）、`YoEmby.Page` 与 `ListItem` 属性契约 |
+
+---
+
+## CoreELEC 实测验收快照（2026-11-24 14:04，Batch 7 健康体检分页卡片仪表盘）
+
+- **部署方式**：`scripts/deploy_to_ce.ps1`（护栏检查 + 41/41 单测通过，自动备份旧插件并排除 `__pycache__`，不触碰用户 `settings.xml` 与 YoPlayer 皮肤）。
+- **日志与服务状态**：`kodi.log` 中 `EMBY` / `ce_opt` / `yoemby` / `settings.xml` 报错与警告为 **0 条**；`127.0.0.1:57342` 监听正常；重启稳定后常驻 `VmRSS` 为 **516.3 MB**（`528,736 kB`）。
+- **实机只读数据校验**：在 CoreELEC Python 3 环境直接对真实数据库执行 `collect_health_report()` + `build_dashboard_data()`，准确生成 3 页 × 2×2 卡片：
+  - 顶部摘要：`总存储 1.52 GB · 增量索引 8 / 8 健康 · 1 项可优化`（不再将未播云盘 STRM 误计为待优化）
+  - 第 1 页（存储分布）：Thumbnails `1.26 GB`（`step=80`）、数据库 `158.9 MB`、`addon temp/` `73.7 MB`、`rollback/` `33.0 MB`（`warn`，绑定 `clean_rollback`）
+  - 第 2 页（媒体库与流信息）：增量索引 `8 / 8`（`ok`，绑定 `rebuild_index`）、媒体源分布 `总 8,851 / 72.9% STRM`、Emby 缺流条目 `417 条`（精确 `LEFT JOIN` 统计，本机可回填 `0` 条，标记 `待播后自愈` / `info`）、CoreELEC 优化与徽标 `开启`
+  - 第 3 页（维护与一键修复）：4 项维护动作卡片（`fix_missing_streams` 显示 `暂无可回填 / 播后自愈`，`clean_rollback` / `rebuild_index` / `raw_report` 全部就绪）。
+- **皮肤覆写状态**：实机日志已确认加载 `/storage/.kodi/addons/skin.yoplayer.infuse/1080p/script-yoemby-health.xml`（YoPlayer 厚磨砂覆写窗口），且 `kodi.log` 零 Python 报错/异常。
 
 ---
 

@@ -113,6 +113,7 @@ class TestMaintenanceAndSettingsXml(unittest.TestCase):
             rep = maintenance.collect_health_report(emby_db, vid_db, "", "", rb_dir, "")
             self.assertEqual(rep["emby_db"]["ce_indexes_present"], len(db_opt.EMBY_ADDITIVE_INDEXES))
             self.assertEqual(rep["emby_db"]["items_missing_videostreams"], 1)
+            self.assertEqual(rep["emby_db"]["items_healable_local"], 1)
             self.assertTrue(rep["video_db"]["avdvplus_columns"])
             self.assertEqual(rep["video_db"]["dv_profile_populated"], 1)
             self.assertEqual(rep["video_db"]["audio_profile_populated"], 1)

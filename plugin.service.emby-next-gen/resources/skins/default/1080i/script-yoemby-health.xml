@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window type="dialog">
+  <defaultcontrol always="true">2000</defaultcontrol>
+  <controls>
+    <control type="image">
+      <left>0</left>
+      <top>0</top>
+      <width>1920</width>
+      <height>1080</height>
+      <texture colordiffuse="CC000000">white.png</texture>
+    </control>
+    <control type="group">
+      <left>240</left>
+      <top>120</top>
+      <width>1440</width>
+      <height>840</height>
+      <control type="image">
+        <left>0</left>
+        <top>0</top>
+        <width>1440</width>
+        <height>840</height>
+        <texture colordiffuse="F2181C24">white.png</texture>
+      </control>
+      <control type="label" id="1001">
+        <left>44</left>
+        <top>26</top>
+        <width>1240</width>
+        <height>46</height>
+        <font>font14</font>
+        <textcolor>FFF5F5F7</textcolor>
+        <label>YoEmby 健康体检仪表盘</label>
+      </control>
+      <control type="label" id="1002">
+        <left>44</left>
+        <top>76</top>
+        <width>1240</width>
+        <height>34</height>
+        <font>font12</font>
+        <textcolor>FFB0B8C4</textcolor>
+      </control>
+      <control type="button" id="1009">
+        <left>1348</left>
+        <top>30</top>
+        <width>48</width>
+        <height>48</height>
+        <font>font12</font>
+        <align>center</align>
+        <aligny>center</aligny>
+        <label>X</label>
+        <textcolor>FFF5F5F7</textcolor>
+        <focusedcolor>FF12161F</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
+        <texturenofocus colordiffuse="33FFFFFF">white.png</texturenofocus>
+        <ondown>9000</ondown>
+      </control>
+      <control type="grouplist" id="9000">
+        <left>44</left>
+        <top>136</top>
+        <width>1352</width>
+        <height>52</height>
+        <orientation>horizontal</orientation>
+        <itemgap>10</itemgap>
+        <onup>1009</onup>
+        <ondown>2000</ondown>
+        <control type="button" id="1101">
+          <width>444</width>
+          <height>52</height>
+          <align>center</align>
+          <aligny>center</aligny>
+          <font>font12</font>
+          <label>1. 存储分布</label>
+          <textcolor>FFD0D6E0</textcolor>
+          <focusedcolor>FF12161F</focusedcolor>
+          <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
+          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <onleft>1103</onleft>
+          <onright>1102</onright>
+          <onup>1009</onup>
+          <ondown>2000</ondown>
+        </control>
+        <control type="button" id="1102">
+          <width>444</width>
+          <height>52</height>
+          <align>center</align>
+          <aligny>center</aligny>
+          <font>font12</font>
+          <label>2. 媒体库与流信息</label>
+          <textcolor>FFD0D6E0</textcolor>
+          <focusedcolor>FF12161F</focusedcolor>
+          <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
+          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <onleft>1101</onleft>
+          <onright>1103</onright>
+          <onup>1009</onup>
+          <ondown>2000</ondown>
+        </control>
+        <control type="button" id="1103">
+          <width>444</width>
+          <height>52</height>
+          <align>center</align>
+          <aligny>center</aligny>
+          <font>font12</font>
+          <label>3. 维护与一键修复</label>
+          <textcolor>FFD0D6E0</textcolor>
+          <focusedcolor>FF12161F</focusedcolor>
+          <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
+          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <onleft>1102</onleft>
+          <onright>1101</onright>
+          <onup>1009</onup>
+          <ondown>2000</ondown>
+        </control>
+      </control>
+      <control type="panel" id="2000">
+        <left>44</left>
+        <top>210</top>
+        <width>1352</width>
+        <height>524</height>
+        <orientation>vertical</orientation>
+        <onup>9000</onup>
+        <ondown>3000</ondown>
+        <itemlayout width="676" height="262">
+          <control type="group">
+            <width>658</width>
+            <height>244</height>
+            <control type="image">
+              <width>658</width>
+              <height>244</height>
+              <texture colordiffuse="22FFFFFF">white.png</texture>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>20</top>
+              <width>440</width>
+              <height>34</height>
+              <font>font12</font>
+              <textcolor>FFB8C0CC</textcolor>
+              <label>$INFO[ListItem.Label]</label>
+            </control>
+            <control type="label">
+              <left>470</left>
+              <top>20</top>
+              <width>164</width>
+              <height>34</height>
+              <font>font12</font>
+              <align>right</align>
+              <textcolor>FF60A5FA</textcolor>
+              <label>$INFO[ListItem.Property(badge)]</label>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>70</top>
+              <width>610</width>
+              <height>56</height>
+              <font>font30</font>
+              <textcolor>FFF5F5F7</textcolor>
+              <label>$INFO[ListItem.Property(value)]</label>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>148</top>
+              <width>610</width>
+              <height>34</height>
+              <font>font12</font>
+              <textcolor>FFB8C0CC</textcolor>
+              <label>$INFO[ListItem.Label2]</label>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>192</top>
+              <width>610</width>
+              <height>34</height>
+              <font>font12</font>
+              <textcolor>FFF5F5F7</textcolor>
+              <label>$INFO[ListItem.Property(action_label)]</label>
+            </control>
+          </control>
+        </itemlayout>
+        <focusedlayout width="676" height="262">
+          <control type="group">
+            <width>658</width>
+            <height>244</height>
+            <control type="image">
+              <width>658</width>
+              <height>244</height>
+              <texture colordiffuse="FFF1F3F5">white.png</texture>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>20</top>
+              <width>440</width>
+              <height>34</height>
+              <font>font12</font>
+              <textcolor>FF495564</textcolor>
+              <label>$INFO[ListItem.Label]</label>
+            </control>
+            <control type="label">
+              <left>470</left>
+              <top>20</top>
+              <width>164</width>
+              <height>34</height>
+              <font>font12</font>
+              <align>right</align>
+              <textcolor>FF18212B</textcolor>
+              <label>$INFO[ListItem.Property(badge)]</label>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>70</top>
+              <width>610</width>
+              <height>56</height>
+              <font>font30</font>
+              <textcolor>FF18212B</textcolor>
+              <label>$INFO[ListItem.Property(value)]</label>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>148</top>
+              <width>610</width>
+              <height>34</height>
+              <font>font12</font>
+              <textcolor>FF495564</textcolor>
+              <label>$INFO[ListItem.Label2]</label>
+            </control>
+            <control type="label">
+              <left>24</left>
+              <top>192</top>
+              <width>610</width>
+              <height>34</height>
+              <font>font12</font>
+              <textcolor>FF18212B</textcolor>
+              <label>$INFO[ListItem.Property(action_label)]</label>
+            </control>
+          </control>
+        </focusedlayout>
+      </control>
+      <control type="label" id="1003">
+        <left>44</left>
+        <top>764</top>
+        <width>840</width>
+        <height>52</height>
+        <font>font12</font>
+        <textcolor>FFB0B8C4</textcolor>
+        <label>← → 切换分页 · 确定执行对应维护 · 返回退出</label>
+      </control>
+      <control type="grouplist" id="3000">
+        <left>920</left>
+        <top>762</top>
+        <width>476</width>
+        <height>56</height>
+        <orientation>horizontal</orientation>
+        <align>right</align>
+        <itemgap>14</itemgap>
+        <onup>2000</onup>
+        <ondown>9000</ondown>
+        <control type="button" id="3001">
+          <width>210</width>
+          <height>56</height>
+          <align>center</align>
+          <aligny>center</aligny>
+          <font>font12</font>
+          <label>刷新体检</label>
+          <textcolor>FFF5F5F7</textcolor>
+          <focusedcolor>FF12161F</focusedcolor>
+          <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
+          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <onleft>3002</onleft>
+          <onright>3002</onright>
+          <onup>2000</onup>
+          <ondown>9000</ondown>
+        </control>
+        <control type="button" id="3002">
+          <width>240</width>
+          <height>56</height>
+          <align>center</align>
+          <aligny>center</aligny>
+          <font>font12</font>
+          <label>查看原始报告</label>
+          <textcolor>FFF5F5F7</textcolor>
+          <focusedcolor>FF12161F</focusedcolor>
+          <texturefocus colordiffuse="FFFFFFFF">white.png</texturefocus>
+          <texturenofocus colordiffuse="22FFFFFF">white.png</texturenofocus>
+          <onleft>3001</onleft>
+          <onright>3001</onright>
+          <onup>2000</onup>
+          <ondown>9000</ondown>
+        </control>
+      </control>
+    </control>
+  </controls>
+</window>
