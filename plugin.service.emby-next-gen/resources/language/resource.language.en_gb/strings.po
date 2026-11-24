@@ -3660,7 +3660,7 @@ msgid "STRM HTTP connect timeout (s)"
 msgstr ""
 
 msgctxt "#33914"
-msgid "Pure-cinema lite mode (prune themes/cinema/rollback)"
+msgid "Pure-cinema lite mode"
 msgstr ""
 
 msgctxt "#33915"
@@ -3681,4 +3681,140 @@ msgstr ""
 
 msgctxt "#33919"
 msgid "Artwork 307 cap & STRM path fix"
+msgstr ""
+
+msgctxt "#33920"
+msgid "Advanced & Expert Tuning"
+msgstr ""
+
+msgctxt "#33921"
+msgid "HTTP connect timeout (seconds) for cloud/STRM playback. Raise slightly if remote storage responds slowly."
+msgstr ""
+
+msgctxt "#33922"
+msgid "Disables themes, cinema intros, and auto rollback backups, and hides unused menu/delete switches. Turn off to restore all options."
+msgstr ""
+
+msgctxt "#33923"
+msgid "Detects CoreELEC avdvplus DB columns and natively writes Dolby Vision Profile and Atmos/DTS:X audio badges."
+msgstr ""
+
+msgctxt "#33924"
+msgid "Backfills Kodi FFmpeg stream info into the local Emby DB after first STRM playback so media flags appear instantly next time."
+msgstr ""
+
+msgctxt "#33925"
+msgid "Coalesces WebSocket bursts and widget refreshes, and skips unchanged DB rewrites to cut UI stutter and RAM spikes."
+msgstr ""
+
+msgctxt "#33926"
+msgid "Adds non-destructive covering indexes and cache tuning to emby_*.db without altering table schema (100% YoPlayer compatible)."
+msgstr ""
+
+msgctxt "#33927"
+msgid "Adds 800px width cap & quality params to local artwork 307 redirects and fixes HTTP STRM encoding/duplicate query flags."
+msgstr ""
+
+msgctxt "#33928"
+msgid "General notification duration"
+msgstr ""
+
+msgctxt "#33929"
+msgid "Seconds that welcome, connection, and status notifications stay on screen."
+msgstr ""
+
+msgctxt "#33930"
+msgid "New content toast duration"
+msgstr ""
+
+msgctxt "#33931"
+msgid "Seconds that the New Content notification stays on screen."
+msgstr ""
+
+msgctxt "#33932"
+msgid "Show a brief welcome notification after Kodi connects to your Emby server."
+msgstr ""
+
+msgctxt "#33933"
+msgid "Show a status notification when the Emby server restarts or updates."
+msgstr ""
+
+msgctxt "#33934"
+msgid "Show a notification when the Emby server becomes unreachable."
+msgstr ""
+
+msgctxt "#33935"
+msgid "Show a notification after new movies or episodes finish syncing from Emby."
+msgstr ""
+
+msgctxt "#33936"
+msgid "Show Add/Remove Favourite in the item context menu and sync with Emby."
+msgstr ""
+
+msgctxt "#33937"
+msgid "Show Play Specials in the context menu for TV shows and movies."
+msgstr ""
+
+msgctxt "#33938"
+msgid "Show Refresh Item in the context menu to re-fetch metadata and artwork from Emby."
+msgstr ""
+
+msgctxt "#33939"
+msgid "Show Go to TV Show in an episode context menu to jump straight to the series."
+msgstr ""
+
+msgctxt "#33940"
+msgid "Show this action in the Kodi context menu (automatically hidden while Pure-cinema Lite Mode is active)."
+msgstr ""
+
+msgctxt "#33941"
+msgid "Use an animated GIF addon icon in legacy skins; no visual effect under YoPlayer."
+msgstr ""
+
+msgctxt "#33942"
+msgid "Trigger a Kodi skin refresh right after connecting to Emby; usually unnecessary under YoPlayer."
+msgstr ""
+
+msgctxt "#33943"
+msgid "Immediately reload the active Kodi skin to recover from skin cache glitches."
+msgstr ""
+
+msgctxt "#33944"
+msgid "Skip marked TV show intros automatically, or prompt via the bottom-right floating pill when Ask is enabled."
+msgstr ""
+
+msgctxt "#33945"
+msgid "Skip marked end credits automatically, or prompt via the bottom-right floating pill when Ask is enabled."
+msgstr ""
+
+msgctxt "#33946"
+msgid "Max seconds to wait while resolving 302/307 redirect targets for external/cloud streams."
+msgstr ""
+
+msgctxt "#33947"
+msgid "Only applies when YoEmby CE Default Multiversion Source is set to Plugin Default; otherwise the YoEmby CE policy takes precedence."
+msgstr ""
+
+msgctxt "#33948"
+msgid "Protocol used by the local Emby bridge (keep HTTP default for YoPlayer & STRM compatibility)."
+msgstr ""
+
+msgctxt "#33949"
+msgid "Delete all locally cached offline files downloaded by the plugin."
+msgstr ""
+
+msgctxt "#33950"
+msgid "Write verbose plugin debug logs into kodi.log for troubleshooting (turn off during normal viewing)."
+msgstr ""
+
+msgctxt "#33951"
+msgid "Verify HTTPS TLS certificates when connecting to Emby; disable only for self-signed LAN certificates."
+msgstr ""
+
+msgctxt "#33952"
+msgid "Check available storage space before writing artwork caches or sync data."
+msgstr ""
+
+msgctxt "#33953"
+msgid "Compact SQLite databases (VACUUM) to reclaim unused space after large library deletions."
 msgstr ""

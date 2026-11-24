@@ -94,7 +94,7 @@
                     <level>2</level>
                     <control type="button" format="action"/>
                 </setting>
-                <setting id="webservicemode" type="string" label="33744" help="">
+                <setting id="webservicemode" type="string" label="33744" help="33948"> <!-- [CE-OPT] Add help text -->
                     <level>2</level>
                     <default>http</default>
                     <constraints>
@@ -172,7 +172,7 @@
                         <heading>33569</heading>
                     </control>
                 </setting>
-                <setting id="DownloadReset" label="33572" type="action" help="">
+                <setting id="DownloadReset" label="33572" type="action" help="33949"> <!-- [CE-OPT] Add help text -->
                     <data>NotifyAll(plugin.service.emby-next-gen,downloadreset)</data>
                     <level>2</level>
                     <control type="button" format="action"/>
@@ -614,7 +614,7 @@
         </category>
         <category id="playback" label="30516" help="">
             <group id="3" label="33419">
-                <setting label="33417" id="enableSkipIntro" type="boolean" help="">
+                <setting label="33417" id="enableSkipIntro" type="boolean" help="33944"> <!-- [CE-OPT] Add help text -->
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
@@ -629,7 +629,7 @@
                         </dependency>
                     </dependencies>
                 </setting>
-                <setting label="33420" id="enableSkipCredits" type="boolean" help="">
+                <setting label="33420" id="enableSkipCredits" type="boolean" help="33945"> <!-- [CE-OPT] Add help text -->
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
@@ -646,16 +646,25 @@
                 </setting>
             </group>
             <group id="4" label="33650">
+                <!-- [CE-OPT] Hide destructive post-play file deletion while ce_lite_mode is enabled (reversible) -->
                 <setting label="30114" id="offerDelete" type="boolean" help="33304">
                     <level>2</level>
                     <default>false</default>
                     <control type="toggle"/>
+                    <dependencies>
+                        <dependency type="visible">
+                            <condition operator="is" setting="ce_lite_mode">false</condition>
+                        </dependency>
+                    </dependencies>
                 </setting>
                 <setting label="30115" id="deleteTV" type="boolean" help="33304">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                     <dependencies>
+                        <dependency type="visible">
+                            <condition operator="is" setting="ce_lite_mode">false</condition>
+                        </dependency>
                         <dependency type="enable">
                             <condition operator="is" setting="offerDelete">true</condition>
                         </dependency>
@@ -666,6 +675,9 @@
                     <default>true</default>
                     <control type="toggle"/>
                     <dependencies>
+                        <dependency type="visible">
+                            <condition operator="is" setting="ce_lite_mode">false</condition>
+                        </dependency>
                         <dependency type="enable">
                             <condition operator="is" setting="offerDelete">true</condition>
                         </dependency>
@@ -673,7 +685,7 @@
                 </setting>
             </group>
             <group id="5" label="30516">
-                <setting label="33692" id="AutoSelectHighestResolution" type="boolean" help="33693">
+                <setting label="33692" id="AutoSelectHighestResolution" type="boolean" help="33947"> <!-- [CE-OPT] Clarify priority vs ce_multiversion_policy -->
                     <level>2</level>
                     <default>false</default>
                     <control type="toggle"/>
@@ -707,7 +719,7 @@
                     <default>false</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="followhttptimeout" type="integer" label="33714" help="">
+                <setting id="followhttptimeout" type="integer" label="33714" help="33946"> <!-- [CE-OPT] Add help text -->
                     <level>2</level>
                     <default>5</default>
                     <constraints>
@@ -2115,60 +2127,68 @@
                 </setting>
             </group>
             <group id="4" label="33603">
+                <!-- [CE-OPT] Hide Lite-Mode suppressed context switches (reversible when ce_lite_mode=false) & add help -->
                 <setting label="33143" id="enableContextDelete" type="boolean" help="33304">
                     <level>2</level>
                     <default>false</default>
                     <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
                 </setting>
-                <setting label="33601" id="enableContextRemoteOptions" type="boolean" help="">
+                <setting label="33601" id="enableContextRemoteOptions" type="boolean" help="33940">
+                    <level>2</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
+                </setting>
+                <setting label="33602" id="enableContextDownloadOptions" type="boolean" help="33940">
+                    <level>2</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
+                </setting>
+                <setting label="33604" id="enableContextFavouriteOptions" type="boolean" help="33936">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="33602" id="enableContextDownloadOptions" type="boolean" help="">
+                <setting label="33605" id="enableContextSpecialsOptions" type="boolean" help="33937">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="33604" id="enableContextFavouriteOptions" type="boolean" help="">
+                <setting label="33606" id="enableContextRecordingOptions" type="boolean" help="33940">
+                    <level>2</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
+                </setting>
+                <setting label="33607" id="enableContextRefreshOptions" type="boolean" help="33938">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="33605" id="enableContextSpecialsOptions" type="boolean" help="">
+                <setting label="33668" id="enableContextGotoOptions" type="boolean" help="33939">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="33606" id="enableContextRecordingOptions" type="boolean" help="">
+                <setting label="33789" id="enableContextSimilarOptions" type="boolean" help="33940">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
                 </setting>
-                <setting label="33607" id="enableContextRefreshOptions" type="boolean" help="">
+                <setting label="33676" id="enableContextSettingsOptions" type="boolean" help="33940">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
                 </setting>
-                <setting label="33668" id="enableContextGotoOptions" type="boolean" help="">
+                <setting label="33798" id="enableContextPlayRandom" type="boolean" help="33940">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
-                </setting>
-                <setting label="33789" id="enableContextSimilarOptions" type="boolean" help="">
-                    <level>2</level>
-                    <default>true</default>
-                    <control type="toggle"/>
-                </setting>
-                <setting label="33676" id="enableContextSettingsOptions" type="boolean" help="">
-                    <level>2</level>
-                    <default>true</default>
-                    <control type="toggle"/>
-                </setting>
-                <setting label="33798" id="enableContextPlayRandom" type="boolean" help="">
-                    <level>2</level>
-                    <default>true</default>
-                    <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
                 </setting>
             </group>
             <group id="5" label="33300">
@@ -2198,12 +2218,13 @@
                 </setting>
             </group>
             <group id="7" label="33645">
-                <setting label="30249" id="connectMsg" type="boolean" help="">
+                <!-- [CE-OPT] Disambiguate notification duration labels & add help text -->
+                <setting label="30249" id="connectMsg" type="boolean" help="33932">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="30530" id="restartMsg" type="boolean" help="">
+                <setting label="30530" id="restartMsg" type="boolean" help="33933">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
@@ -2213,12 +2234,12 @@
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="33677" id="offlineMsg" type="boolean" help="">
+                <setting label="33677" id="offlineMsg" type="boolean" help="33934">
                     <level>2</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="displayMessage" type="integer" label="33646" help="33647">
+                <setting id="displayMessage" type="integer" label="33928" help="33929">
                     <level>2</level>
                     <default>10</default>
                     <constraints>
@@ -2238,12 +2259,12 @@
                         </dependency>
                     </dependencies>
                 </setting>
-                <setting label="30531" id="newContent" type="boolean" help="">
+                <setting label="30531" id="newContent" type="boolean" help="33935">
                     <level>2</level>
                     <default>false</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="newContentTime" type="integer" label="33646" help="33647">
+                <setting id="newContentTime" type="integer" label="33930" help="33931">
                     <level>2</level>
                     <default>5</default>
                     <constraints>
@@ -2262,8 +2283,9 @@
                 </setting>
             </group>
             <group id="8" label="33410">
-                <setting label="33333" id="animateicon" type="boolean" help="">
-                    <level>0</level>
+                <!-- [CE-OPT] Move skin-debug toggles to L3 Expert, hide redundant Embuary switch in Lite Mode & add help -->
+                <setting label="33333" id="animateicon" type="boolean" help="33941">
+                    <level>3</level>
                     <default>false</default>
                     <control type="toggle"/>
                 </setting>
@@ -2271,6 +2293,7 @@
                     <level>2</level>
                     <default>false</default>
                     <control type="toggle"/>
+                    <dependencies><dependency type="visible"><condition operator="is" setting="ce_lite_mode">false</condition></dependency></dependencies>
                 </setting>
                 <setting label="33437" id="AssignEpisodePostersToTVShowPoster" type="boolean" help="33438">
                     <level>3</level>
@@ -2282,14 +2305,14 @@
                     <default>false</default>
                     <control type="toggle"/>
                 </setting>
-                <setting label="33334" id="refreshskin" type="boolean" help="">
-                    <level>0</level>
+                <setting label="33334" id="refreshskin" type="boolean" help="33942">
+                    <level>3</level>
                     <default>false</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="skinreload" label="33409" type="action">
+                <setting id="skinreload" label="33409" type="action" help="33943">
                     <data>NotifyAll(plugin.service.emby-next-gen,skinreload)</data>
-                    <level>0</level>
+                    <level>3</level>
                     <control type="button" format="action"/>
                 </setting>
             </group>
@@ -2392,7 +2415,7 @@
         </category>
         <category id="Advanced" label="30022" help="">
             <group id="1" label="30022">
-                <setting label="33826" id="DebugLog" type="boolean">
+                <setting label="33826" id="DebugLog" type="boolean" help="33950"> <!-- [CE-OPT] Add help text -->
                     <level>3</level>
                     <default>false</default>
                     <control type="toggle"/>
@@ -2474,7 +2497,7 @@
                         <popup>false</popup>
                     </control>
                 </setting>
-                <setting label="30500" id="sslverify" type="boolean" help="">
+                <setting label="30500" id="sslverify" type="boolean" help="33951"> <!-- [CE-OPT] Add help text -->
                     <level>3</level>
                     <default>true</default>
                     <control type="toggle"/>
@@ -2491,7 +2514,7 @@
                         <popup>false</popup>
                     </control>
                 </setting>
-                <setting label="33452" id="verifyFreeSpace" type="boolean" help="">
+                <setting label="33452" id="verifyFreeSpace" type="boolean" help="33952"> <!-- [CE-OPT] Add help text -->
                     <level>3</level>
                     <default>true</default>
                     <control type="toggle"/>
@@ -2501,7 +2524,7 @@
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="databasevacuummanual" label="33436" type="action" help="334078">
+                <setting id="databasevacuummanual" label="33436" type="action" help="33953"> <!-- [CE-OPT] Fix upstream 334078 typo -->
                     <data>NotifyAll(plugin.service.emby-next-gen,databasevacuummanual)</data>
                     <level>3</level>
                     <control type="button" format="action"/>
@@ -2514,13 +2537,15 @@
                 <setting id="ce_enabled" type="boolean" label="33902" help="33909"><level>0</level><default>true</default><control type="toggle"/></setting>
                 <setting id="ce_multiversion_policy" type="string" label="33904" help="33911"><level>0</level><default>prefer_local</default><constraints><options><option label="33906">prefer_local</option><option label="33907">prefer_resolution</option><option label="33908">upstream</option></options></constraints><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="spinner" format="string"/></setting>
                 <setting id="ce_skip_chapter_bookmarks" type="boolean" label="33905" help="33912"><level>0</level><default>false</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
-                <setting id="ce_strm_timeout" type="integer" label="33913" help=""><level>2</level><default>15</default><constraints><minimum>5</minimum><step>1</step><maximum>60</maximum></constraints><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="slider" format="integer"><popup>false</popup></control></setting>
-                <setting id="ce_lite_mode" type="boolean" label="33914" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
-                <setting id="ce_avdvplus_badges" type="boolean" label="33915" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
-                <setting id="ce_strm_heal" type="boolean" label="33916" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
-                <setting id="ce_sync_debounce" type="boolean" label="33917" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
-                <setting id="ce_db_indexes" type="boolean" label="33918" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
-                <setting id="ce_artwork_307_opt" type="boolean" label="33919" help=""><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+            </group>
+            <group id="2" label="33920"> <!-- [CE-OPT] Separate advanced/expert tuning group with full help coverage -->
+                <setting id="ce_strm_timeout" type="integer" label="33913" help="33921"><level>2</level><default>15</default><constraints><minimum>5</minimum><step>1</step><maximum>60</maximum></constraints><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="slider" format="integer"><popup>false</popup></control></setting>
+                <setting id="ce_lite_mode" type="boolean" label="33914" help="33922"><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_avdvplus_badges" type="boolean" label="33915" help="33923"><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_strm_heal" type="boolean" label="33916" help="33924"><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_sync_debounce" type="boolean" label="33917" help="33925"><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_db_indexes" type="boolean" label="33918" help="33926"><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
+                <setting id="ce_artwork_307_opt" type="boolean" label="33919" help="33927"><level>3</level><default>true</default><dependencies><dependency type="enable"><condition operator="is" setting="ce_enabled">true</condition></dependency></dependencies><control type="toggle"/></setting>
             </group>
         </category>
     </section>

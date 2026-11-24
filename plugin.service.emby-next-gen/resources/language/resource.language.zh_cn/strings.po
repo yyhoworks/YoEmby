@@ -3662,8 +3662,8 @@ msgid "STRM HTTP connect timeout (s)"
 msgstr "STRM 网络连接超时（秒）"
 
 msgctxt "#33914"
-msgid "Pure-cinema lite mode (prune themes/cinema/rollback)"
-msgstr "纯观影轻装模式（停用主题/影院/旧备份）"
+msgid "Pure-cinema lite mode"
+msgstr "纯观影轻装模式"
 
 msgctxt "#33915"
 msgid "avdvplus DV Profile & Atmos badges"
@@ -3684,3 +3684,139 @@ msgstr "SQLite 增量索引与缓存调优"
 msgctxt "#33919"
 msgid "Artwork 307 cap & STRM path fix"
 msgstr "海报 307 限宽与 STRM 路径修复"
+
+msgctxt "#33920"
+msgid "Advanced & Expert Tuning"
+msgstr "进阶与专家调优"
+
+msgctxt "#33921"
+msgid "HTTP connect timeout (seconds) for cloud/STRM playback. Raise slightly if remote storage responds slowly."
+msgstr "播放云盘或 HTTP STRM 时的单次连接超时上限，网络波动时适当调大可减少起播失败。"
+
+msgctxt "#33922"
+msgid "Disables themes, cinema intros, and auto rollback backups, and hides unused menu/delete switches. Turn off to restore all options."
+msgstr "停用主题背景音、影院开场与自动旧备份，并自动隐藏「界面/播放」中用不到的杂项与删片开关；关闭即可恢复完整菜单。"
+
+msgctxt "#33923"
+msgid "Detects CoreELEC avdvplus DB columns and natively writes Dolby Vision Profile and Atmos/DTS:X audio badges."
+msgstr "自动识别 CoreELEC avdvplus 数据库扩展列，原生写入杜比视界 Profile 与全景声轨徽标。"
+
+msgctxt "#33924"
+msgid "Backfills Kodi FFmpeg stream info into the local Emby DB after first STRM playback so media flags appear instantly next time."
+msgstr "云盘 STRM 首次播放后自动将 Kodi 探测到的音视频与字幕流回写至 Emby 本地库，后续秒显完整媒体标识。"
+
+msgctxt "#33925"
+msgid "Coalesces WebSocket bursts and widget refreshes, and skips unchanged DB rewrites to cut UI stutter and RAM spikes."
+msgstr "合并短时间内的 WebSocket 推送与首页组件刷新，跳过未变更条目的重复写库，降低卡顿与内存峰值。"
+
+msgctxt "#33926"
+msgid "Adds non-destructive covering indexes and cache tuning to emby_*.db without altering table schema (100% YoPlayer compatible)."
+msgstr "为 emby_*.db 纯增量添加覆盖索引并优化 SQLite 缓存参数（不改表结构，完全兼容 YoPlayer）。"
+
+msgctxt "#33927"
+msgid "Adds 800px width cap & quality params to local artwork 307 redirects and fixes HTTP STRM encoding/duplicate query flags."
+msgstr "本地海报代理重定向自动附带 800px 限宽与画质参数，并修正 HTTP STRM 中文编码与双拼参数问题。"
+
+msgctxt "#33928"
+msgid "General notification duration"
+msgstr "常规通知显示时长"
+
+msgctxt "#33929"
+msgid "Seconds that welcome, connection, and status notifications stay on screen."
+msgstr "欢迎、连接状态与常规提示通知在屏幕停留的秒数。"
+
+msgctxt "#33930"
+msgid "New content toast duration"
+msgstr "新内容提醒显示时长"
+
+msgctxt "#33931"
+msgid "Seconds that the New Content notification stays on screen."
+msgstr "仅控制「新内容提醒」通知在屏幕上停留的秒数。"
+
+msgctxt "#33932"
+msgid "Show a brief welcome notification after Kodi connects to your Emby server."
+msgstr "Kodi 启动并成功连上 Emby 服务器后，在右上角弹出简短欢迎通知。"
+
+msgctxt "#33933"
+msgid "Show a status notification when the Emby server restarts or updates."
+msgstr "当检测到 Emby 服务端重启或升级时弹出状态提醒。"
+
+msgctxt "#33934"
+msgid "Show a notification when the Emby server becomes unreachable."
+msgstr "当 Emby 服务器无法连接或网络中断时弹出离线提示。"
+
+msgctxt "#33935"
+msgid "Show a notification after new movies or episodes finish syncing from Emby."
+msgstr "Emby 入库新电影或新剧集并同步完成后弹出通知提醒。"
+
+msgctxt "#33936"
+msgid "Show Add/Remove Favourite in the item context menu and sync with Emby."
+msgstr "在影片右键菜单中显示「加入/移出收藏」，实时同步到 Emby 服务端。"
+
+msgctxt "#33937"
+msgid "Show Play Specials in the context menu for TV shows and movies."
+msgstr "在剧集或电影右键菜单中快速浏览并播放特别篇/花絮。"
+
+msgctxt "#33938"
+msgid "Show Refresh Item in the context menu to re-fetch metadata and artwork from Emby."
+msgstr "手动从 Emby 服务端重新拉取当前条目的元数据、评分与封面。"
+
+msgctxt "#33939"
+msgid "Show Go to TV Show in an episode context menu to jump straight to the series."
+msgstr "在单集条目右键菜单中一键跳转至所属剧集主页。"
+
+msgctxt "#33940"
+msgid "Show this action in the Kodi context menu (automatically hidden while Pure-cinema Lite Mode is active)."
+msgstr "在 Kodi 右键菜单中显示该项操作（开启纯观影轻装模式时自动隐藏以保持菜单整洁）。"
+
+msgctxt "#33941"
+msgid "Use an animated GIF addon icon in legacy skins; no visual effect under YoPlayer."
+msgstr "在部分原生皮肤中使用 GIF 动态图标；YoPlayer 皮肤下不影响外观。"
+
+msgctxt "#33942"
+msgid "Trigger a Kodi skin refresh right after connecting to Emby; usually unnecessary under YoPlayer."
+msgstr "仅在老皮肤组件未自动刷新时开启；YoPlayer 皮肤下无需开启。"
+
+msgctxt "#33943"
+msgid "Immediately reload the active Kodi skin to recover from skin cache glitches."
+msgstr "排查皮肤缓存异常时立即重载当前 Kodi 皮肤。"
+
+msgctxt "#33944"
+msgid "Skip marked TV show intros automatically, or prompt via the bottom-right floating pill when Ask is enabled."
+msgstr "播放带片头标记的剧集时自动跳过，或在下方开启「询问」后由右下角胶囊确认跳过。"
+
+msgctxt "#33945"
+msgid "Skip marked end credits automatically, or prompt via the bottom-right floating pill when Ask is enabled."
+msgstr "播放至片尾演职员表标记时自动跳至结尾或下集，可配合下方「询问」使用。"
+
+msgctxt "#33946"
+msgid "Max seconds to wait while resolving 302/307 redirect targets for external/cloud streams."
+msgstr "探测 302/307 跳转链接时的最大等待秒数，云盘响应慢时可适当调大。"
+
+msgctxt "#33947"
+msgid "Only applies when YoEmby CE Default Multiversion Source is set to Plugin Default; otherwise the YoEmby CE policy takes precedence."
+msgstr "仅在「YoEmby 优化 → 多版本影片默认片源」设为插件默认时生效；开启专属加速后优先按多版本策略选源。"
+
+msgctxt "#33948"
+msgid "Protocol used by the local Emby bridge (keep HTTP default for YoPlayer & STRM compatibility)."
+msgstr "本地 Emby 代理服务的传输模式（保持默认 HTTP 以兼容 YoPlayer 与云盘 STRM）。"
+
+msgctxt "#33949"
+msgid "Delete all locally cached offline files downloaded by the plugin."
+msgstr "清空插件本地缓存的所有离线下载文件，不影响 Emby 服务端源文件。"
+
+msgctxt "#33950"
+msgid "Write verbose plugin debug logs into kodi.log for troubleshooting (turn off during normal viewing)."
+msgstr "向 kodi.log 输出插件详细调试日志，仅在排查问题时开启。"
+
+msgctxt "#33951"
+msgid "Verify HTTPS TLS certificates when connecting to Emby; disable only for self-signed LAN certificates."
+msgstr "连接 HTTPS Emby 服务器时校验 SSL 证书；仅在使用局域网自签名证书时关闭。"
+
+msgctxt "#33952"
+msgid "Check available storage space before writing artwork caches or sync data."
+msgstr "写入封面缓存或同步数据前先检测磁盘剩余空间，防止空间耗尽损坏数据库。"
+
+msgctxt "#33953"
+msgid "Compact SQLite databases (VACUUM) to reclaim unused space after large library deletions."
+msgstr "手动压缩整理 SQLite 数据库（VACUUM），在大量删除媒体库后回收空闲空间。"
