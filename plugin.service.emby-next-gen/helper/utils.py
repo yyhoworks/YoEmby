@@ -1314,21 +1314,17 @@ def InitSettings():
     theme_fade_in /= 100
     theme_fade_out /= 100
     update_mode_settings()
-    xbmcgui.Window(10000).setProperty('EmbyDelete', str(enableContextDelete))
-    xbmcgui.Window(10000).setProperty('EmbyRemote', str(enableContextRemoteOptions))
-    xbmcgui.Window(10000).setProperty('EmbyDownload', str(enableContextDownloadOptions))
-    xbmcgui.Window(10000).setProperty('EmbyFavourite', str(enableContextFavouriteOptions))
-    xbmcgui.Window(10000).setProperty('EmbySpecials', str(enableContextSpecialsOptions))
-    xbmcgui.Window(10000).setProperty('EmbyRecording', str(enableContextRecordingOptions))
-    xbmcgui.Window(10000).setProperty('EmbyRefresh', str(enableContextRefreshOptions))
-    xbmcgui.Window(10000).setProperty('EmbyGoto', str(enableContextGotoOptions))
-    xbmcgui.Window(10000).setProperty('EmbySimilar', str(enableContextSimilarOptions))
-    xbmcgui.Window(10000).setProperty('EmbySettings', str(enableContextSettingsOptions))
-    xbmcgui.Window(10000).setProperty('EmbyPlayRandom', str(enableContextPlayRandom))
-
-    # [CE-OPT] Reload ce_opt configuration alongside addon settings
-    from ce_opt import config as ce_config
+    # [CE-OPT] Reload ce_opt configuration before applying pure-cinema context menu filters
+    from ce_opt import config as ce_config, lite as ce_lite
     ce_config.reload(Addon)
+    ce_lite.apply_context_window_properties(xbmcgui.Window(10000), {
+        'EmbyDelete': enableContextDelete, 'EmbyRemote': enableContextRemoteOptions,
+        'EmbyDownload': enableContextDownloadOptions, 'EmbyFavourite': enableContextFavouriteOptions,
+        'EmbySpecials': enableContextSpecialsOptions, 'EmbyRecording': enableContextRecordingOptions,
+        'EmbyRefresh': enableContextRefreshOptions, 'EmbyGoto': enableContextGotoOptions,
+        'EmbySimilar': enableContextSimilarOptions, 'EmbySettings': enableContextSettingsOptions,
+        'EmbyPlayRandom': enableContextPlayRandom,
+    })
 
     with SafeLock(SettingsChangedCondition):
         SettingsChangedCondition.notify_all()

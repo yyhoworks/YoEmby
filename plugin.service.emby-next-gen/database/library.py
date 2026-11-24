@@ -638,8 +638,11 @@ class Library:
                     utils.create_ProgressBar(self.UpdateParentsId, utils.Translate(33199), utils.Translate(33178))
                     RecordsPercentParents = len(UpdateItemsData) / 100
 
+                    from ce_opt import lite as ce_lite # [CE-OPT] Skip unused trailer/theme HTTP calls in lite mode
                     for ParentCounter, ParentItem in enumerate(UpdateItemsData): # {'EmbyParentId': 76037, 'EmbyParentType': 'Movie'}
                         if ContentType == "Trailer":
+                            if ce_lite.should_skip_trailer_sync(utils.enableCinemaMovies, utils.enableCinemaEpisodes):
+                                continue
                             for TrailerLocal in self.API.get_local_trailers(ParentItem['EmbyParentId']):
                                 TrailerLocal.update({'EmbyParentType': ParentItem['EmbyParentType'], 'LibraryId': LibraryId, 'EmbyParentId': ParentItem['EmbyParentId'], 'KodiParentId': ParentItem['KodiParentId']})
                                 if ParentItem in UpdateItemsDataTemp:
@@ -654,6 +657,8 @@ class Library:
 
                                 yield True, Special
                         elif ContentType == "Theme": # ThemeSong
+                            if ce_lite.should_skip_theme_sync(utils.theme_enable_audio, utils.theme_enable_video):
+                                continue
                             Themes = self.API.get_themes(ParentItem['EmbyParentId'])
 
                             if 'ThemeSongsResult' in Themes:
@@ -1367,7 +1372,9 @@ class Library:
 
             if syncGlobalVideoContent:
                 SQLs["emby"].add_LibraryAdd("999999999", "shared", "Person", "video") # Person can only be queried globally by Emby server
-                SQLs["emby"].add_LibraryAdd("999999998", "shared", "Video", "none") # Video's with no ParentId are Trailes in TrailerFolder and can only be queried globally by Emby server
+                from ce_opt import lite as ce_lite # [CE-OPT] Skip global trailer folder sync when cinema mode is disabled
+                if not ce_lite.should_skip_trailer_sync(utils.enableCinemaMovies, utils.enableCinemaEpisodes):
+                    SQLs["emby"].add_LibraryAdd("999999998", "shared", "Video", "none") # Video's with no ParentId are Trailes in TrailerFolder and can only be queried globally by Emby server
                 xbmc.log(f"EMBY.database.library: ---[ Emby server {self.ServerData['ServerId']}: added library: 999999999 / Person ]", 1) # LOGINFO
                 xbmc.log(f"EMBY.database.library: ---[ Emby server {self.ServerData['ServerId']}: added library: 999999998 / Video ]", 1) # LOGINFO
 

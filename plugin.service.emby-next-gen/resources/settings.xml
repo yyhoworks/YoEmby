@@ -203,6 +203,7 @@
                 </setting>
             </group>
             <group id="2" label="33766" help="33767">
+                <visible>false</visible> <!-- [CE-OPT] Hide redundant pause-sync wall -->
                 <setting label="33843" id="PauseSyncDuringPlayback" type="boolean" help="33767">
                     <level>2</level>
                     <default>false</default>
@@ -320,6 +321,7 @@
                 </setting>
             </group>
             <group id="3" label="33577">
+                <visible>false</visible> <!-- [CE-OPT] Hide low-level pagination wall -->
                 <setting id="MaxURILength" type="integer" label="33673" help="33674">
                     <level>3</level>
                     <default>1500</default>
@@ -724,6 +726,7 @@
                 </setting>
             </group>
             <group id="6" label="33495">
+                <visible>false</visible> <!-- [CE-OPT] Hide unused Remote/SyncPlay group -->
                 <setting label="33498" id="remotecontrol_force_clients" type="boolean" help="33499">
                     <level>3</level>
                     <default>true</default>
@@ -809,6 +812,7 @@
                 </setting>
             </group>
             <group id="7" label="33470">
+                <visible>false</visible> <!-- [CE-OPT] Hide video transcode group (CoreELEC hardware direct-play) -->
                 <setting label="33455" id="transcode_h264" type="boolean" help="">
                     <level>2</level>
                     <default>false</default>
@@ -1214,6 +1218,7 @@
                 </setting>
             </group>
             <group id="8" label="33471">
+                <visible>false</visible> <!-- [CE-OPT] Hide audio transcode group -->
                 <setting label="33465" id="transcode_aac" type="boolean" help="">
                     <level>2</level>
                     <default>false</default>
@@ -1437,6 +1442,7 @@
                 </setting>
             </group>
             <group id="9" label="33472">
+                <visible>false</visible> <!-- [CE-OPT] Hide transcode bitrate group -->
                 <setting id="videoBitrate" type="integer" label="30160" help="33316">
                     <level>2</level>
                     <default>100000000</default>
@@ -1525,6 +1531,7 @@
                 </setting>
             </group>
             <group id="10" label="33480">
+                <visible>false</visible> <!-- [CE-OPT] Hide LiveTV transcode group -->
                 <setting label="33482" id="transcode_livetv_video" type="boolean" help="">
                     <level>2</level>
                     <default>false</default>
@@ -1553,6 +1560,7 @@
                 </setting>
             </group>
             <group id="11" label="33473">
+                <visible>false</visible> <!-- [CE-OPT] Hide transcode output format group -->
                 <setting id="TranscodeFormatVideo" type="string" label="33244" help="">
                     <level>2</level>
                     <default>h264</default>
@@ -1595,6 +1603,7 @@
                 </setting>
             </group>
             <group id="11" label="33410">
+                <visible>false</visible> <!-- [CE-OPT] Hide transcode audio selection group -->
                 <setting label="33534" id="transcode_select_audiostream" type="boolean" help="">
                     <level>3</level>
                     <default>true</default>
@@ -1611,6 +1620,7 @@
             </group>
         </category>
         <category id="Themes" label="33804" help="">
+            <visible>false</visible> <!-- [CE-OPT] Hide unused Themes tab -->
             <group id="1" label="33804">
                 <setting label="33805" id="theme_enable_audio" type="boolean" help="">
                     <level>2</level>
@@ -1850,6 +1860,7 @@
             </group>
         </category>
         <category id="cinema" label="33820" help="">
+            <visible>false</visible> <!-- [CE-OPT] Hide unused Cinema Mode tab -->
             <group id="1" label="33298">
                 <setting label="33262" id="enableCinemaMovies" type="boolean" help="">
                     <level>2</level>
@@ -1935,6 +1946,7 @@
         </category>
         <category id="Interface" label="30235" help="">
             <group id="2" label="33531">
+                <visible>false</visible> <!-- [CE-OPT] Hide legacy PIL art compression -->
                 <setting label="33116" id="compressArt" type="boolean" help="33322">
                     <level>2</level>
                     <default>false</default>
@@ -1959,6 +1971,7 @@
                 </setting>
             </group>
             <group id="3" label="33532">
+                <visible>false</visible> <!-- [CE-OPT] Hide legacy artwork resolution matrix -->
                 <setting label="33522" id="ArtworkLimitations" type="boolean" help="33533">
                     <level>2</level>
                     <default>false</default>
@@ -2282,6 +2295,7 @@
             </group>
         </category>
         <category id="DynamicInfos" label="33253" help="33303">
+            <visible>false</visible> <!-- [CE-OPT] Hide unused DynamicInfos tab -->
             <group id="1" label="33253">
                 <setting label="33247" id="getDateCreated" type="boolean" help="33303">
                     <level>2</level>
@@ -2331,6 +2345,7 @@
             </group>
         </category>
         <category id="Backup" label="33651" help="">
+            <visible>false</visible> <!-- [CE-OPT] Hide legacy Backup tab -->
             <group id="1" label="33651">
                 <setting id="backupPath" type="path" label="33093" help="">
                     <level>2</level>

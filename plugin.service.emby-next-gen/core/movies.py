@@ -123,7 +123,9 @@ class Movies:
             self.userdata(Item, IncrementalSync, True)
 
         # Add Subitems
-        self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Movie", Item['LibraryId'], Item['KodiItemId'], "Theme", "") # Theme
+        from ce_opt import lite as ce_lite # [CE-OPT] Skip theme sync queue when themes are disabled
+        if not ce_lite.should_skip_theme_sync(utils.theme_enable_audio, utils.theme_enable_video):
+            self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Movie", Item['LibraryId'], Item['KodiItemId'], "Theme", "") # Theme
 
         if int(Item['SpecialFeatureCount']):
             self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Movie", Item['LibraryId'], Item['KodiItemId'], "Special", "video") # Specials

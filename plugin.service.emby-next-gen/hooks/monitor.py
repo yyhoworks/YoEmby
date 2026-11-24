@@ -606,10 +606,13 @@ def StartUp():
     else:  # Regular start
         xbmc.log("EMBY.hooks.monitor: Monitor listening", 1) # LOGINFO
         FullShutdown = True
-        backup.create_Rollback()
+        from ce_opt import lite as ce_lite # [CE-OPT] Pure-cinema lite mode hooks
+        if ce_lite.should_create_rollback():
+            backup.create_Rollback()
         utils.start_thread(utils.RunSyncJobsAsync, ())
         utils.start_thread(VideoLibrary_OnUpdate, ())
-        utils.start_thread(themes.monitor_Themes, ())
+        if ce_lite.should_start_themes_thread(utils.theme_enable_audio, utils.theme_enable_video):
+            utils.start_thread(themes.monitor_Themes, ())
         utils.start_thread(favorites.monitor_Favorites, ())
         utils.start_thread(favorites.emby_change_Favorite, ())
         utils.start_thread(httpcache.clear, ())

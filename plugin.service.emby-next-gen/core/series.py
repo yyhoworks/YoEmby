@@ -103,7 +103,9 @@ class Series:
 
             utils.notify_event("content_add", {"EmbyId": Item['Id'], "KodiId": Item['KodiItemId'], "KodiType": "tvshow"}, IncrementalSync)
 
-        self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Series", Item['LibraryId'], Item['KodiItemId'], "Theme", "") # Add Subitems
+        from ce_opt import lite as ce_lite # [CE-OPT] Skip theme sync queue when themes are disabled
+        if not ce_lite.should_skip_theme_sync(utils.theme_enable_audio, utils.theme_enable_video):
+            self.SQLs["emby"].add_UpdateItem_Parent(Item['Id'], "Series", Item['LibraryId'], Item['KodiItemId'], "Theme", "") # Add Subitems
         return not Item['UpdateItem']
 
     # This updates: Favorite, LastPlayedDate, PlaybackPositionTicks

@@ -6,7 +6,7 @@ import xbmc
 from database import dbio
 from emby import metadata, httpcache
 from helper import utils, context, playerops, pluginmenu, player, xmls, queue, cache
-from ce_opt import artwork as ce_artwork, config as ce_config, safety as ce_safety, strm as ce_strm # [CE-OPT] Import ce_opt hooks
+from ce_opt import artwork as ce_artwork, config as ce_config, lite as ce_lite, safety as ce_safety, strm as ce_strm # [CE-OPT] Import ce_opt hooks
 DefaultVideoSettings = xmls.load_defaultvideosettings()
 SubtitlesLanguageDefault = DefaultVideoSettings.get("SubtitlesLanguage", "").lower()
 SubtitleEnableDefault = DefaultVideoSettings.get('ShowSubtitles', False)
@@ -30,85 +30,9 @@ DelayedContentCondition = threading.Condition(threading.Lock())
 ServerNotAvailable = set()
 xbmc.log(f"EMBY.hooks.webservice: Number of workers {MaxWorkers}", 1) # LOGINFO
 
-# Load binary files once
-BlackMP4 = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.mp4")
-BlackMKV = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.mkv")
-BlackAVI = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.avi")
-BlackWEBM = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.webm")
-BlackMOV = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.mov")
-BlackTS = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.ts")
-BlackMPEG = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.mpeg")
-BlackWMV = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.wmv")
-BlackOGV = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.ogv")
-Black3GP = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.3gp")
-BlackVOB = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.vob")
-BlackM4V = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.m4v")
-BlackFLV = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.flv")
-BlackMXF = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.mxf")
-BlackASF = utils.readFileBinary("special://home/addons/plugin.service.emby-next-gen/resources/black.asf")
-
-# Generate HTTP responses
-sendBlackMP4 = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackMP4)}\r\nContent-Type: video/mp4\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackMP4
-sendBlackMKV = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackMKV)}\r\nContent-Type: video/x-matroska\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackMKV
-sendBlackAVI = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackAVI)}\r\nContent-Type: video/x-msvideo\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackAVI
-sendBlackWEBM = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackWEBM)}\r\nContent-Type: video/webm\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackWEBM
-sendBlackMOV = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackMOV)}\r\nContent-Type: video/quicktime\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackMOV
-sendBlackTS = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackTS)}\r\nContent-Type: video/mp2t\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackTS
-sendBlackMPEG = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackMPEG)}\r\nContent-Type: video/mpeg\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackMPEG
-sendBlackWMV = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackWMV)}\r\nContent-Type: video/x-ms-wmv\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackWMV
-sendBlackOGV = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackOGV)}\r\nContent-Type: video/ogg\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackOGV
-sendBlack3GP = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(Black3GP)}\r\nContent-Type: video/3gpp\r\nAccept-Ranges: none\r\n\r\n'.encode() + Black3GP
-sendBlackVOB = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackVOB)}\r\nContent-Type: video/dvd\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackVOB
-sendBlackFLV = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackFLV)}\r\nContent-Type: video/x-flv\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackFLV
-sendBlackMXF = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackMXF)}\r\nContent-Type: application/mxf\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackMXF
-sendBlackASF = f'HTTP/1.1 200 OK\r\nServer: Emby-Next-Gen\r\nConnection: close\r\nContent-Length: {len(BlackASF)}\r\nContent-Type: video/x-ms-asf\r\nAccept-Ranges: none\r\n\r\n'.encode() + BlackASF
-
+# [CE-OPT] Lazily load dummy black.* HTTP responses on demand (saves ~4.3 MB RAM & 15 flash reads at boot)
 def get_MediaHandler(Payload):
-    p = Payload.lower()
-
-    if p.endswith(".mp4") or p.endswith(".m4v"):
-        return sendBlackMP4
-
-    if p.endswith(".mkv"):
-        return sendBlackMKV
-
-    if p.endswith(".avi"):
-        return sendBlackAVI
-
-    if p.endswith(".ts") or p.endswith(".m2ts") or p.endswith(".mts"):
-        return sendBlackTS
-
-    if p.endswith(".mpg") or p.endswith(".mpeg") or p.endswith(".mpe"):
-        return sendBlackMPEG
-
-    if p.endswith(".webm"):
-        return sendBlackWEBM
-
-    if p.endswith(".mov"):
-        return sendBlackMOV
-
-    if p.endswith(".wmv"):
-        return sendBlackWMV
-
-    if p.endswith(".ogv"):
-        return sendBlackOGV
-
-    if p.endswith(".3gp"):
-        return sendBlack3GP
-
-    if p.endswith(".flv"):
-        return sendBlackFLV
-
-    if p.endswith(".mxf"):
-        return sendBlackMXF
-
-    if p.endswith(".vob"):
-        return sendBlackVOB
-
-    if p.endswith(".asf"):
-        return sendBlackASF
-
-    return sendBlackMP4
+    return ce_lite.get_black_media_response(Payload, utils.readFileBinary)
 
 def start():
     global Running
